@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User
+from .models import User, Subscription
 
 
 class CustomUserAdmin(UserAdmin):
@@ -32,4 +32,10 @@ class CustomUserAdmin(UserAdmin):
     ordering = ('email',)
 
 
+class SubscriptionAdmin(admin.ModelAdmin):
+    list_display = ('user', 'subscribed_to')
+    search_fields = ('user',)
+
+
 admin.site.register(User, CustomUserAdmin)
+admin.site.register(Subscription, SubscriptionAdmin)
