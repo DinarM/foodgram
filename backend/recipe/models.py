@@ -35,25 +35,16 @@ class BaseModel(models.Model):
         abstract = True
 
 
-class CommonInfoBaseModel(models.Model):
+class Ingredient(BaseModel):
     """
-    Базовая модель с полем названия.
+    Модель ингредиента.
     """
     name = models.CharField(
         max_length=128,
         verbose_name='Название'
     )
-
-    class Meta:
-        abstract = True
-
-
-class Ingredient(BaseModel, CommonInfoBaseModel):
-    """
-    Модель ингредиента.
-    """
     measurement_unit = models.CharField(
-        max_length=128,
+        max_length=64,
         verbose_name='Единица измерения'
     )
 
@@ -65,11 +56,16 @@ class Ingredient(BaseModel, CommonInfoBaseModel):
         return self.name
 
 
-class Tag(BaseModel, CommonInfoBaseModel):
+class Tag(BaseModel):
     """
     Модель тега.
     """
+    name = models.CharField(
+        max_length=32,
+        verbose_name='Название'
+    )
     slug = models.SlugField(
+        max_length=32,
         verbose_name='Слаг',
         unique=True
     )
@@ -82,10 +78,14 @@ class Tag(BaseModel, CommonInfoBaseModel):
         return self.name
 
 
-class Recipe(BaseModel, CommonInfoBaseModel):
+class Recipe(BaseModel):
     """
     Модель рецепта.
     """
+    name = models.CharField(
+        max_length=256,
+        verbose_name='Название'
+    )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
