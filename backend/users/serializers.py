@@ -1,4 +1,6 @@
 import re
+import base64
+from django.core.files.base import ContentFile
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -7,6 +9,17 @@ from rest_framework import serializers
 from .models import Subscription
 
 User = get_user_model()
+
+
+class Base64ImageField(serializers.ImageField):
+    def to_internal_value(self, data):
+        if isinstance(data, str) and data.startswith('data:image'):
+            format, imgstr = data.split(';base64,')
+            ext = format.split('/')[-1]
+
+            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
+
+        return super().to_internal_value(data)
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
@@ -60,8 +73,9 @@ class CustomUserSerializer(UserSerializer):
         model = User
         fields = (
             'id', 'username', 'first_name', 'last_name',
-            'email', 'is_subscribed'
+            'email', 'is_subscribed', 'avatar'
         )
+        read_only_fields = ('avatar',)
 
     def get_is_subscribed(self, obj):
         """
@@ -74,6 +88,17 @@ class CustomUserSerializer(UserSerializer):
         return Subscription.objects.filter(
             user=user, subscribed_to=obj
         ).exists()
+
+
+class UserAvatarUpdateSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для обновления аватара пользователя.
+    """
+    avatar = Base64ImageField(required=True, allow_null=True)
+
+    class Meta:
+        model = User
+        fields = ('avatar',)
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
