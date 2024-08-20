@@ -3,9 +3,10 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.pagination import LimitOffsetPagination
 from django.contrib.auth import get_user_model
 
-from .serializers import CustomUserSerializer, UserAvatarUpdateSerializer
+from .serializers import CustomUserSerializer, CustomUserCreateSerializer, UserAvatarUpdateSerializer, CustomUserPasswordSerializer
 
 User = get_user_model()
 
@@ -15,11 +16,20 @@ class CustomUserViewSet(UserViewSet):
     Использует CustomUserSerializer для сериализации данных пользователей.
     """
     serializer_class = CustomUserSerializer
+    pagination_class = LimitOffsetPagination
 
     def get_serializer_class(self):
         """
-        Возвращает кастомный сериализатор для всех действий в данном ViewSet.
+        Возвращает сериализатор в зависимости от действия.
+
+        Для создания пользователя возвращает CustomUserCreateSerializer, 
+        для изменения пароля — CustomUserPasswordSerializer, 
+        в остальных случаях — CustomUserSerializer.
         """
+        if self.action == 'create':
+            return CustomUserCreateSerializer
+        elif self.action == 'set_password':
+            return CustomUserPasswordSerializer
         return CustomUserSerializer
     
 

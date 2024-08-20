@@ -3,6 +3,7 @@ import base64
 from django.core.files.base import ContentFile
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
 
@@ -60,6 +61,32 @@ class CustomUserCreateSerializer(UserCreateSerializer):
                 })
         return super().validate(attrs)
 
+class CustomUserPasswordSerializer(serializers.Serializer):
+    """
+    Сериализатор для изменения пароля пользователя.
+    """
+    current_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
+
+    def validate_current_password(self, value):
+        """
+        Проверяет, что текущий пароль введен верно.
+        """
+        user = self.context['request'].user
+        if not user.check_password(value):
+            raise serializers.ValidationError("Текущий пароль неверен.")
+        return value
+
+    def validate_new_password(self, value):
+        """
+        Проверка нового пароля на соответствие стандартам безопасности
+        и на отличие от текущего пароля.
+        """
+        user = self.context['request'].user
+        if user.check_password(value):
+            raise serializers.ValidationError("Новый пароль не должен соответствовать старому.")
+        validate_password(value)
+        return value
 
 class CustomUserSerializer(UserSerializer):
     """
