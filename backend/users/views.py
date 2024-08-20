@@ -38,6 +38,7 @@ class UserAvatarUpdateView(APIView):
     Вьюшка для обновления и удаления аватара пользователя.
     """
     permission_classes = [IsAuthenticated]
+    pagination_class = LimitOffsetPagination
 
     def put(self, request, *args, **kwargs):
         """
