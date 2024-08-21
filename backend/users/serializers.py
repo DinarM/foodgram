@@ -1,6 +1,5 @@
 import re
-import base64
-from django.core.files.base import ContentFile
+
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
@@ -8,19 +7,9 @@ from django.core.exceptions import ValidationError
 from rest_framework import serializers
 
 from .models import Subscription
+from api.helpers import Base64ImageField
 
 User = get_user_model()
-
-
-class Base64ImageField(serializers.ImageField):
-    def to_internal_value(self, data):
-        if isinstance(data, str) and data.startswith('data:image'):
-            format, imgstr = data.split(';base64,')
-            ext = format.split('/')[-1]
-
-            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
-
-        return super().to_internal_value(data)
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
@@ -116,7 +105,6 @@ class CustomUserSerializer(UserSerializer):
             user=user, subscribed_to=obj
         ).exists()
 
-
 class UserAvatarUpdateSerializer(serializers.ModelSerializer):
     """
     Сериализатор для обновления аватара пользователя.
@@ -127,6 +115,16 @@ class UserAvatarUpdateSerializer(serializers.ModelSerializer):
         model = User
         fields = ('avatar',)
 
+    def to_representation(self, instance):
+        """
+        Возвращает абсолютный URL для аватара пользователя.
+        """
+        representation = super().to_representation(instance)
+        request = self.context.get('request')
+        avatar_url = request.build_absolute_uri(instance.avatar.url)
+        representation['avatar'] = avatar_url
+        
+        return representation
 
 class SubscriptionSerializer(serializers.ModelSerializer):
     """
