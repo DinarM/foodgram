@@ -1,5 +1,6 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
+from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -52,3 +53,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
             )
 
         return super().update(request, *args, **kwargs)
+
+    @action(detail=True, methods=['get'], url_path='get-link')
+    def get_link(self, request, pk=None):
+        """
+        Возвращает короткую ссылку на рецепт.
+        """
+        recipe = self.get_object()
+        link = request.build_absolute_uri(f'/recipes/{recipe.id}')
+        return Response({'short-link': link})

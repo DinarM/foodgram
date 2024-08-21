@@ -105,7 +105,6 @@ class CustomUserSerializer(UserSerializer):
             user=user, subscribed_to=obj
         ).exists()
 
-
 class UserAvatarUpdateSerializer(serializers.ModelSerializer):
     """
     Сериализатор для обновления аватара пользователя.
@@ -116,6 +115,16 @@ class UserAvatarUpdateSerializer(serializers.ModelSerializer):
         model = User
         fields = ('avatar',)
 
+    def to_representation(self, instance):
+        """
+        Возвращает абсолютный URL для аватара пользователя.
+        """
+        representation = super().to_representation(instance)
+        request = self.context.get('request')
+        avatar_url = request.build_absolute_uri(instance.avatar.url)
+        representation['avatar'] = avatar_url
+        
+        return representation
 
 class SubscriptionSerializer(serializers.ModelSerializer):
     """

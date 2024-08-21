@@ -45,7 +45,9 @@ class UserAvatarUpdateView(APIView):
         Обработка PUT запроса для обновления аватара текущего пользователя.
         """
         user = request.user
-        serializer = UserAvatarUpdateSerializer(user, data=request.data)
+        serializer = UserAvatarUpdateSerializer(
+            user, data=request.data, context={'request': request}
+        )
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
