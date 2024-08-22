@@ -1,18 +1,24 @@
 from djoser.views import UserViewSet
-from rest_framework import status
+from rest_framework import status, viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import LimitOffsetPagination
 from django.contrib.auth import get_user_model
 
-from .serializers import CustomUserSerializer, CustomUserCreateSerializer, UserAvatarUpdateSerializer, CustomUserPasswordSerializer
+from .models import Subscription
+
+from .serializers import (
+    CustomUserSerializer, CustomUserCreateSerializer, SubscriptionSerializer,
+    UserAvatarUpdateSerializer, CustomUserPasswordSerializer
+)
 
 User = get_user_model()
 
+
 class CustomUserViewSet(UserViewSet):
     """
-    Кастомный ViewSet для работы с пользователями.
+    Кастомный вьюсет для работы с пользователями.
     Использует CustomUserSerializer для сериализации данных пользователей.
     """
     serializer_class = CustomUserSerializer
@@ -22,8 +28,8 @@ class CustomUserViewSet(UserViewSet):
         """
         Возвращает сериализатор в зависимости от действия.
 
-        Для создания пользователя возвращает CustomUserCreateSerializer, 
-        для изменения пароля — CustomUserPasswordSerializer, 
+        Для создания пользователя возвращает CustomUserCreateSerializer,
+        для изменения пароля — CustomUserPasswordSerializer,
         в остальных случаях — CustomUserSerializer.
         """
         if self.action == 'create':
@@ -31,11 +37,11 @@ class CustomUserViewSet(UserViewSet):
         elif self.action == 'set_password':
             return CustomUserPasswordSerializer
         return CustomUserSerializer
-    
+
 
 class UserAvatarUpdateView(APIView):
     """
-    Вьюшка для обновления и удаления аватара пользователя.
+    Вьюсет для обновления и удаления аватара пользователя.
     """
     permission_classes = [IsAuthenticated]
     pagination_class = LimitOffsetPagination
@@ -61,3 +67,18 @@ class UserAvatarUpdateView(APIView):
         user.avatar = None
         user.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class SubscriptionViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Вьюсет для отображения подписок текущего пользователя.
+    """
+    serializer_class = SubscriptionSerializer
+    pagination_class = LimitOffsetPagination
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        """
+        Возвращает список подписок текущего пользователя.
+        """
+        return Subscription.objects.filter(user=self.request.user)
