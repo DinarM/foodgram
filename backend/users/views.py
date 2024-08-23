@@ -22,7 +22,6 @@ class CustomUserViewSet(UserViewSet):
     """
     Кастомный вьюсет для работы с пользователями.
     """
-    permission_classes = [IsAuthenticated]
     serializer_class = CustomUserSerializer
     pagination_class = LimitOffsetPagination
 
@@ -36,7 +35,10 @@ class CustomUserViewSet(UserViewSet):
             return CustomUserPasswordSerializer
         return CustomUserSerializer
 
-    @action(detail=True, methods=['post', 'delete'], url_path='subscribe')
+    @action(
+        detail=True, methods=['post', 'delete'],
+        url_path='subscribe', permission_classes=(IsAuthenticated,)
+    )
     def subscribe(self, request, id=None):
         """
         Создает или удаляет подписку на другого пользователя.

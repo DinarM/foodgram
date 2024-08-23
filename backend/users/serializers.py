@@ -6,9 +6,9 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
 
-from recipe.models import Recipe
 from .models import Subscription
-from api.helpers import Base64ImageField
+from common.helpers import Base64ImageField
+from common.serializers import RecipeSimpleSerializer
 
 User = get_user_model()
 
@@ -131,24 +131,6 @@ class UserAvatarUpdateSerializer(serializers.ModelSerializer):
         representation['avatar'] = avatar_url
 
         return representation
-
-
-class RecipeSimpleSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для краткого отображения рецептов.
-    """
-    image = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Recipe
-        fields = ('id', 'name', 'image', 'cooking_time')
-
-    def get_image(self, obj):
-        """
-        Возвращает абсолютный URL для изображения рецепта.
-        """
-        request = self.context.get('request')
-        return request.build_absolute_uri(obj.image.url)
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
