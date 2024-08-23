@@ -6,6 +6,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
 
+from recipe.models import Recipe
 from .models import Subscription
 from api.helpers import Base64ImageField
 
@@ -50,6 +51,7 @@ class CustomUserCreateSerializer(UserCreateSerializer):
                 })
         return super().validate(attrs)
 
+
 class CustomUserPasswordSerializer(serializers.Serializer):
     """
     Сериализатор для изменения пароля пользователя.
@@ -73,9 +75,12 @@ class CustomUserPasswordSerializer(serializers.Serializer):
         """
         user = self.context['request'].user
         if user.check_password(value):
-            raise serializers.ValidationError("Новый пароль не должен соответствовать старому.")
+            raise serializers.ValidationError(
+                "Новый пароль не должен соответствовать старому."
+            )
         validate_password(value)
         return value
+
 
 class CustomUserSerializer(UserSerializer):
     """
@@ -105,6 +110,7 @@ class CustomUserSerializer(UserSerializer):
             user=user, subscribed_to=obj
         ).exists()
 
+
 class UserAvatarUpdateSerializer(serializers.ModelSerializer):
     """
     Сериализатор для обновления аватара пользователя.
@@ -123,13 +129,97 @@ class UserAvatarUpdateSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         avatar_url = request.build_absolute_uri(instance.avatar.url)
         representation['avatar'] = avatar_url
-        
+
         return representation
+
+
+class RecipeSimpleSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для краткого отображения рецептов.
+    """
+    image = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time')
+
+    def get_image(self, obj):
+        """
+        Возвращает абсолютный URL для изображения рецепта.
+        """
+        request = self.context.get('request')
+        return request.build_absolute_uri(obj.image.url)
+
 
 class SubscriptionSerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели Subscription.
+    Отображает подписчиков пользователя.
     """
+    follower = CustomUserSerializer(
+        source='subscribed_to', read_only=True
+    )
+    recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = Subscription
-        fields = '__all__'
+        fields = ('follower', 'recipes', 'recipes_count')
+
+    def get_recipes(self, obj):
+        """
+        Возвращает рецепты пользователя, на которого подписан.
+        """
+        recipes = obj.subscribed_to.recipes.all()
+        request = self.context.get('request')
+        recipes_limit = request.query_params.get('recipes_limit')
+
+        if recipes_limit is not None:
+            try:
+                recipes_limit = int(recipes_limit)
+                recipes = recipes[:recipes_limit]
+            except ValueError:
+                pass
+
+        return RecipeSimpleSerializer(
+            recipes, many=True, context=self.context
+        ).data
+
+    def get_recipes_count(self, obj):
+        """
+        Возвращает количество рецептов пользователя.
+        """
+        return obj.subscribed_to.recipes.count()
+
+    def to_representation(self, instance):
+        """
+        Изменяет структуру вывода.
+        """
+        user_data = CustomUserSerializer(
+            instance.subscribed_to, context=self.context
+        ).data
+        recipes = self.get_recipes(instance)
+        user_data['recipes'] = recipes
+        user_data['recipes_count'] = self.get_recipes_count(instance)
+        return user_data
+
+
+class SubscribeSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для создания и отображения подписок.
+    """
+    follower = CustomUserSerializer(
+        source='subscribed_to', read_only=True
+    )
+    recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = Subscription
+        fields = ('follower', 'recipes', 'recipes_count')
+
+    def to_representation(self, instance):
+        """
+        Возвращает данные рецепта в формате, подходящем для чтения.
+        """
+        return SubscriptionSerializer(instance, context=self.context).data
