@@ -202,3 +202,24 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         user_data['recipes'] = recipes
         user_data['recipes_count'] = self.get_recipes_count(instance)
         return user_data
+
+
+class SubscribeSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для создания и отображения подписок.
+    """
+    follower = CustomUserSerializer(
+        source='subscribed_to', read_only=True
+    )
+    recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = Subscription
+        fields = ('follower', 'recipes', 'recipes_count')
+
+    def to_representation(self, instance):
+        """
+        Возвращает данные рецепта в формате, подходящем для чтения.
+        """
+        return SubscriptionSerializer(instance, context=self.context).data
