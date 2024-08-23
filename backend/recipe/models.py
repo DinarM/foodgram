@@ -195,17 +195,17 @@ class ShoppingCart(BaseModel):
     """
     Модель корзины покупок.
     """
-    recipe = models.ForeignKey(
-        Recipe,
-        on_delete=models.CASCADE,
-        related_name='shopping_carts',
-        verbose_name='рецепт'
-    )
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name='shopping_carts',
         verbose_name='пользователь'
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='shopping_carts',
+        verbose_name='рецепт'
     )
 
     class Meta:

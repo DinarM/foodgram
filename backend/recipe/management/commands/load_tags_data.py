@@ -9,6 +9,7 @@ ALREADY_LOADED_ERROR_MESSAGE = """
 новую пустую базу данных с таблицами.
 """
 
+
 class Command(BaseCommand):
     """
     Команда для загрузки данных из файла ../data/tags.csv

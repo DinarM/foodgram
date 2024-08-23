@@ -1,6 +1,8 @@
 from rest_framework import serializers
 
-from recipe.models import Tag, Ingredient, Recipe, RecipeIngredient, Favorite
+from recipe.models import (
+    Tag, Ingredient, Recipe, RecipeIngredient, Favorite, ShoppingCart
+)
 from users.serializers import CustomUserSerializer
 from common.helpers import Base64ImageField
 from common.serializers import RecipeSimpleSerializer
@@ -65,7 +67,7 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         user = self.context.get('request').user
         if user.is_anonymous:
             return False
-        return user.shopping_carts.filter(id=obj.id).exists()
+        return user.shopping_carts.filter(user=user, recipe=obj).exists()
 
 
 class RecipeWriteSerializer(serializers.ModelSerializer):
@@ -177,6 +179,25 @@ class FavoriteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Favorite
+        fields = ('recipe',)
+
+    def to_representation(self, instance):
+        """
+        Возвращает данные рецепта в формате, подходящем для чтения.
+        """
+        return RecipeSimpleSerializer(
+            instance.recipe, context=self.context
+        ).data
+
+
+class ShoppingCartSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для модели ShoppingCart.
+    """
+    recipe = RecipeSimpleSerializer(read_only=True)
+
+    class Meta:
+        model = ShoppingCart
         fields = ('recipe',)
 
     def to_representation(self, instance):

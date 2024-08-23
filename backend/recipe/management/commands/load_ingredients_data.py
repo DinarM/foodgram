@@ -9,6 +9,7 @@ ALREADY_LOADED_ERROR_MESSAGE = """
 новую пустую базу данных с таблицами.
 """
 
+
 class Command(BaseCommand):
     """
     Команда для загрузки данных из файла data/ingredients.csv
@@ -33,7 +34,9 @@ class Command(BaseCommand):
                 name = row[0]
                 measurement_unit = row[1]
 
-                ingredient = Ingredient(name=name, measurement_unit=measurement_unit)
+                ingredient = Ingredient(
+                    name=name, measurement_unit=measurement_unit
+                )
                 ingredient.save()
 
         print("Данные успешно загружены.")
