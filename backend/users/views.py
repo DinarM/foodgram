@@ -36,8 +36,10 @@ class CustomUserViewSet(UserViewSet):
         return CustomUserSerializer
 
     @action(
-        detail=True, methods=['post', 'delete'],
-        url_path='subscribe', permission_classes=(IsAuthenticated,)
+        detail=True,
+        methods=['post', 'delete'],
+        url_path='subscribe',
+        permission_classes=(IsAuthenticated,)
     )
     def subscribe(self, request, id=None):
         """

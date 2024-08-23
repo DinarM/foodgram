@@ -27,7 +27,6 @@ class RecipeFilter(django_filters.FilterSet):
 
     def filter_is_favorited(self, queryset, name, value):
         """Фильтрует рецепты по статусу 'в избранном'."""
-        print('включился')
         user = self.request.user
         if user.is_anonymous:
             return queryset
