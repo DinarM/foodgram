@@ -9,10 +9,10 @@ class RecipeFilter(django_filters.FilterSet):
     tags = django_filters.CharFilter(
         field_name='tags__slug', method='filter_by_tags'
     )
-    is_favorited = django_filters.BooleanFilter(
+    is_favorited = django_filters.rest_framework.filters.BooleanFilter(
         method='filter_is_favorited'
     )
-    is_in_shopping_cart = django_filters.BooleanFilter(
+    is_in_shopping_cart = django_filters.rest_framework.filters.BooleanFilter(
         method='filter_is_in_shopping_cart'
     )
 
@@ -27,6 +27,7 @@ class RecipeFilter(django_filters.FilterSet):
 
     def filter_is_favorited(self, queryset, name, value):
         """Фильтрует рецепты по статусу 'в избранном'."""
+        print('включился')
         user = self.request.user
         if user.is_anonymous:
             return queryset
@@ -36,6 +37,7 @@ class RecipeFilter(django_filters.FilterSet):
 
     def filter_is_in_shopping_cart(self, queryset, name, value):
         """Фильтрует рецепты по статусу 'в корзине покупок'."""
+        print('включился filter_is_in_shopping_cart')
         user = self.request.user
         if user.is_anonymous:
             return queryset
