@@ -1,6 +1,16 @@
-Находясь в папке infra, выполните команду docker-compose up. При выполнении этой команды контейнер frontend, описанный в docker-compose.yml, подготовит файлы, необходимые для работы фронтенд-приложения, а затем прекратит свою работу.
+## Проект Foodgram
+Foodgram — это удобный помощник в планировании покупок и приготовлении еды с коллекцией рецептов. Приложение позволяет делиться своими рецептами, сохранять понравившиеся в избранное и автоматически составлять список покупок на основе выбранных блюд. Также есть возможность подписываться на любимых кулинаров.
 
-По адресу http://localhost изучите фронтенд веб-приложения, а по адресу http://localhost/api/docs/ — спецификацию API.
-
-python manage.py load_ingredients_data
-python manage.py load_tags_data
+### Развернуть проект:
+- Клонировать репозиторий
+- Установить на сервере Docker, Docker Compose
+- Скопировать на сервер файлы docker-compose.yml, nginx.conf
+- Создать и запустить контейнеры Docker:
+  sudo docker compose up -d
+- Выполнить миграции:
+  sudo docker compose exec backend python manage.py migrate
+- Собрать статику:
+  sudo docker compose exec backend python manage.py collectstatic
+- Заполнить базу данных с ингредиентами из файла ingredients.csv и тегами из файла tags.csv:
+  docker exec -it foodgram-backend python manage.py load_ingredients_data
+  docker exec -it foodgram-backend python manage.py load_tags_data
