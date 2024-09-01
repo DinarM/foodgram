@@ -98,13 +98,13 @@ jobs:
   
             sudo docker compose up -d --build
 
-            docker compose exec backend python manage.py makemigrations
-            docker compose exec backend python manage.py migrate
+            sudo docker compose exec backend python manage.py makemigrations
+            sudo docker compose exec backend python manage.py migrate
 
-            docker compose exec backend python manage.py load_ingredients_data
-            docker compose exec backend python manage.py load_tags_data
+            sudo docker compose exec backend python manage.py load_ingredients_data
+            sudo docker compose exec backend python manage.py load_tags_data
 
-            docker compose exec backend python manage.py collectstatic
+            sudo docker compose exec backend python manage.py collectstatic
 
   send_message:
     name: Sending Telegram message
