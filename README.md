@@ -12,5 +12,5 @@ Foodgram — это удобный помощник в планировании 
 - Собрать статику:
   sudo docker compose exec backend python manage.py collectstatic
 - Заполнить базу данных с ингредиентами из файла ingredients.csv и тегами из файла tags.csv:
-  docker exec -it foodgram-backend python manage.py load_ingredients_data
-  docker exec -it foodgram-backend python manage.py load_tags_data
+  sudo docker exec -it foodgram-backend python manage.py load_ingredients_data
+  sudo docker exec -it foodgram-backend python manage.py load_tags_data
