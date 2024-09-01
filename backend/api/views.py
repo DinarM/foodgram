@@ -3,7 +3,6 @@ from django.http import HttpResponse
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -13,6 +12,7 @@ from .serializers import (
 )
 from recipe.models import Tag, Ingredient, Recipe, Favorite, ShoppingCart
 from .filters import RecipeFilter, IngredientFilter
+from .pagination import CustomPageNumberPagination
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -37,7 +37,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     """
     serializer_class = RecipeReadSerializer
     queryset = Recipe.objects.all()
-    pagination_class = LimitOffsetPagination
+    pagination_class = CustomPageNumberPagination
     filter_backends = [DjangoFilterBackend]
     filterset_class = RecipeFilter
 
