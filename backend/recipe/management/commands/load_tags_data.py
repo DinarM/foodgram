@@ -15,7 +15,7 @@ class Command(BaseCommand):
     Команда для загрузки данных из файла ../data/tags.csv
     в модель Tag.
     """
-    help = "Загружает данные из ../data/tags.csv"
+    help = "Загружает данные из ./data/tags.csv"
 
     def handle(self, *args, **options):
         """
@@ -28,7 +28,7 @@ class Command(BaseCommand):
 
         print("Загрузка данных о тегах")
 
-        with open('../data/tags.csv', 'r') as csvfile:
+        with open('./data/tags.csv', 'r') as csvfile:
             reader = csv.reader(csvfile)
             for row in reader:
                 name = row[0]

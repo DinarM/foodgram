@@ -28,7 +28,7 @@ class Command(BaseCommand):
 
         print("Загрузка данных об ингредиентах")
 
-        with open('../data/ingredients.csv', 'r') as csvfile:
+        with open('./data/ingredients.csv', 'r') as csvfile:
             reader = csv.reader(csvfile)
             for row in reader:
                 name = row[0]
