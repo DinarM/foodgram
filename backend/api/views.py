@@ -79,7 +79,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
         Добавляет рецепт в избранное.
         """
         recipe = self.get_object()
-        # current_user = request.user
 
         data = {'recipe': recipe.id}
 
@@ -98,13 +97,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
         """
         recipe = self.get_object()
         current_user = request.user
-        try:
-            favorite = Favorite.objects.get(
-                user=current_user, recipe=recipe
-            )
-            favorite.delete()
+        delete_cnt, _ = Favorite.objects.filter(
+            user=current_user, recipe=recipe
+        ).delete()
+
+        if delete_cnt > 0:
             return Response(status=status.HTTP_204_NO_CONTENT)
-        except Favorite.DoesNotExist:
+        else:
             return Response(
                 {"detail": "Данный рецепт не добавлен в избранное."},
                 status=status.HTTP_400_BAD_REQUEST
