@@ -8,7 +8,7 @@ from rest_framework import serializers
 from drf_extra_fields.fields import Base64ImageField
 
 from .models import Subscription
-from common.serializers import RecipeSimpleSerializer
+
 
 User = get_user_model()
 
@@ -154,6 +154,8 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         """
         Возвращает рецепты пользователя, на которого подписан.
         """
+        from api.serializers import RecipeSimpleSerializer
+        
         recipes = obj.subscribed_to.recipes.all()
         request = self.context.get('request')
         recipes_limit = request.query_params.get('recipes_limit')
