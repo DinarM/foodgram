@@ -229,6 +229,34 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
         model = ShoppingCart
         fields = ('recipe',)
 
+    def validate(self, data):
+        """
+        Проверка на наличие дубликатов рецептов в корзине.
+        """
+        recipe_id = self.initial_data.get('recipe') 
+        user = self.context['request'].user
+
+        recipe = get_object_or_404(Recipe, id=recipe_id)
+
+        if ShoppingCart.objects.filter(user=user, recipe=recipe).exists():
+            raise serializers.ValidationError(
+                "Вы уже добавили этот рецепт в корзину"
+            )
+
+        data['recipe'] = recipe
+        return data
+
+    def create(self, validated_data):
+        """Добавляем рецепт в корзину."""
+        user = self.context['request'].user
+        recipe = validated_data['recipe']
+
+        shopping_cart = ShoppingCart.objects.create(
+            user=user, recipe=recipe
+        )
+
+        return shopping_cart
+
     def to_representation(self, instance):
         """
         Возвращает данные рецепта в формате, подходящем для чтения.

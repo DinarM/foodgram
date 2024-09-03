@@ -110,45 +110,45 @@ class RecipeViewSet(viewsets.ModelViewSet):
             )
 
     @action(
-        detail=True, methods=['post', 'delete'],
-        url_path='shopping_cart', 
+        detail=True, methods=['post'], url_path='shopping_cart',
         permission_classes=(IsAuthenticated,)
     )
     def shopping_cart(self, request, pk=None):
         """
-        Добавляет или удаляет рецепт из корзины покупок.
+        Добавляет рецепт в корзину покупок.
+        """
+        recipe = self.get_object()
+
+        data = {'recipe': recipe.id}
+
+        serializer = ShoppingCartSerializer(data=data, context={'request': request})
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+    @shopping_cart.mapping.delete
+    def delete_shopping_cart(self, request, pk=None):
+        """
+        Удаляет рецепт из корзины покупок.
         """
         recipe = self.get_object()
         current_user = request.user
+        delete_cnt, _ = ShoppingCart.objects.filter(
+            user=current_user, recipe=recipe
+        ).delete()
 
-        if request.method == 'POST':
-            if ShoppingCart.objects.filter(
-                user=current_user, recipe=recipe
-            ).exists():
-                return Response(
-                    {"detail": "Вы уже добавили этот рецепт в корзину"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            cart_item = ShoppingCart.objects.create(
-                user=current_user, recipe=recipe
+        if delete_cnt > 0:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response(
+                {"detail": "Данный рецепт не добавлен в корзину."},
+                status=status.HTTP_400_BAD_REQUEST
             )
-            serializer = ShoppingCartSerializer(
-                cart_item, context={'request': request}
-            )
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        if request.method == 'DELETE':
-            try:
-                cart_item = ShoppingCart.objects.get(
-                    user=current_user, recipe=recipe
-                )
-                cart_item.delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            except ShoppingCart.DoesNotExist:
-                return Response(
-                    {"detail": "Данный рецепт не добавлен в корзину."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
 
     @action(
         detail=False,
