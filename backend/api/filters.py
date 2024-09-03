@@ -1,4 +1,5 @@
 import django_filters
+from django_filters.rest_framework import filters
 
 from recipe.models import Recipe, Ingredient
 
@@ -6,9 +7,7 @@ from recipe.models import Recipe, Ingredient
 class RecipeFilter(django_filters.FilterSet):
     """Фильтр для модели Recipe."""
     author = django_filters.NumberFilter(field_name='author__id')
-    tags = django_filters.CharFilter(
-        field_name='tags__slug', method='filter_by_tags'
-    )
+    tags = filters.AllValuesMultipleFilter(field_name='tags__slug')
     is_favorited = django_filters.rest_framework.filters.BooleanFilter(
         method='filter_is_favorited'
     )
@@ -18,12 +17,7 @@ class RecipeFilter(django_filters.FilterSet):
 
     class Meta:
         model = Recipe
-        fields = ['author', 'tags', 'is_favorited', 'is_in_shopping_cart']
-
-    def filter_by_tags(self, queryset, name, value):
-        """Фильтрует рецепты по тегам."""
-        tags = self.request.query_params.getlist('tags')
-        return queryset.filter(tags__slug__in=tags).distinct()
+        fields = ('author', 'tags', 'is_favorited', 'is_in_shopping_cart')
 
     def filter_is_favorited(self, queryset, name, value):
         """Фильтрует рецепты по статусу 'в избранном'."""
@@ -36,7 +30,7 @@ class RecipeFilter(django_filters.FilterSet):
 
     def filter_is_in_shopping_cart(self, queryset, name, value):
         """Фильтрует рецепты по статусу 'в корзине покупок'."""
-        print('включился filter_is_in_shopping_cart')
+
         user = self.request.user
         if user.is_anonymous:
             return queryset
@@ -47,9 +41,9 @@ class RecipeFilter(django_filters.FilterSet):
 
 class IngredientFilter(django_filters.FilterSet):
     name = django_filters.CharFilter(
-        field_name='name', lookup_expr='icontains'
+        field_name='name', lookup_expr='istartswith'
     )
 
     class Meta:
         model = Ingredient
-        fields = ['name']
+        fields = ('name',)

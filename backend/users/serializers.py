@@ -5,9 +5,9 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
+from drf_extra_fields.fields import Base64ImageField
 
 from .models import Subscription
-from common.helpers import Base64ImageField
 from common.serializers import RecipeSimpleSerializer
 
 User = get_user_model()
@@ -103,12 +103,14 @@ class CustomUserSerializer(UserSerializer):
         Определяет, подписан ли текущий пользователь на данного пользователя.
         Возвращает True, если подписан, и False, если нет.
         """
-        user = self.context.get('request').user
-        if user.is_anonymous or user == obj:
-            return False
-        return Subscription.objects.filter(
-            user=user, subscribed_to=obj
-        ).exists()
+        request = self.context.get('request')
+        return (
+            request 
+            and request.user.is_authenticated 
+            and Subscription.objects.filter(
+            user=request.user, subscribed_to=obj
+            ).exists()
+        )
 
 
 class UserAvatarUpdateSerializer(serializers.ModelSerializer):

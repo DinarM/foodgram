@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
+from django.shortcuts import get_object_or_404, redirect
 
 from .serializers import (
     TagSerializer, IngredientSerializer, RecipeReadSerializer,
@@ -13,6 +14,16 @@ from .serializers import (
 from recipe.models import Tag, Ingredient, Recipe, Favorite, ShoppingCart
 from .filters import RecipeFilter, IngredientFilter
 from .pagination import CustomPageNumberPagination
+from .permissions import IsAuthorOrReadOnly
+
+
+
+def redirect_to_recipe(request, short_code):
+    """
+    Перенаправляет на полный URL рецепта по короткому коду.
+    """
+    recipe = get_object_or_404(Recipe, short_code=short_code)
+    return redirect(f'/recipes/{recipe.id}')
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -40,6 +51,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     pagination_class = CustomPageNumberPagination
     filter_backends = [DjangoFilterBackend]
     filterset_class = RecipeFilter
+    permission_classes = [IsAuthorOrReadOnly]
 
     def get_serializer_class(self):
         """
@@ -49,77 +61,60 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return RecipeWriteSerializer
         return RecipeReadSerializer
 
-    def update(self, request, *args, **kwargs):
-        """
-        Обновляет рецепт, если пользователь является автором.
-        """
-        instance = self.get_object()
-        if instance.author != request.user:
-            return Response(
-                {'detail': 'Вы не можете обновлять чужие рецепты.'},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        return super().update(request, *args, **kwargs)
-
-    def destroy(self, request, *args, **kwargs):
-        """
-        Удаляет рецепт, если пользователь является автором.
-        """
-        instance = self.get_object()
-        if instance.author != request.user:
-            return Response(
-                {'detail': 'Вы не можете удалять чужие рецепты.'},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        return super().destroy(request, *args, **kwargs)
-
     @action(detail=True, methods=['get'], url_path='get-link')
     def get_link(self, request, pk=None):
         """
         Возвращает короткую ссылку на рецепт.
         """
         recipe = self.get_object()
-        link = request.build_absolute_uri(f'/recipes/{recipe.id}')
+        link = request.build_absolute_uri(f'/api/r/{recipe.short_code}')
         return Response({'short-link': link})
 
-    @action(detail=True, methods=['post', 'delete'], url_path='favorite')
+    @action(
+        detail=True, methods=['post'],
+        url_path='favorite', permission_classes=(IsAuthenticated,)
+    )
     def favorite(self, request, pk=None):
         """
-        Добавляет или удаляет рецепт из избранного.
+        Добавляет рецепт в избранное.
+        """
+        recipe = self.get_object()
+        # current_user = request.user
+
+        data = {'recipe': recipe.id}
+
+        serializer = FavoriteSerializer(data=data, context={'request': request})
+        
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @favorite.mapping.delete
+    def delete_favorite(self, request, pk=None):
+        """
+        Удаляет рецепт из избранного.
         """
         recipe = self.get_object()
         current_user = request.user
-
-        if request.method == 'POST':
-            if Favorite.objects.filter(
-                user=current_user, recipe=recipe
-            ).exists():
-                return Response(
-                    {"detail": "Вы уже добавили этот рецепт в избранное"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            favorite = Favorite.objects.create(
+        try:
+            favorite = Favorite.objects.get(
                 user=current_user, recipe=recipe
             )
-            serializer = FavoriteSerializer(
-                favorite, context={'request': request}
+            favorite.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Favorite.DoesNotExist:
+            return Response(
+                {"detail": "Данный рецепт не добавлен в избранное."},
+                status=status.HTTP_400_BAD_REQUEST
             )
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        if request.method == 'DELETE':
-            try:
-                favorite = Favorite.objects.get(
-                    user=current_user, recipe=recipe
-                )
-                favorite.delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            except Favorite.DoesNotExist:
-                return Response(
-                    {"detail": "Данный рецепт не добавлен в избранное."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-    @action(detail=True, methods=['post', 'delete'], url_path='shopping_cart')
+    @action(
+        detail=True, methods=['post', 'delete'],
+        url_path='shopping_cart', 
+        permission_classes=(IsAuthenticated,)
+    )
     def shopping_cart(self, request, pk=None):
         """
         Добавляет или удаляет рецепт из корзины покупок.

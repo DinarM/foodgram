@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.utils.crypto import get_random_string
 
 User = get_user_model()
 
@@ -114,6 +115,13 @@ class Recipe(BaseModel):
         verbose_name='время приготовления',
         validators=[validate_positive_integer]
     )
+    short_code = models.CharField(
+        max_length=10,
+        unique=True,
+        blank=True,
+        null=True,
+        verbose_name='Короткий код'
+    )
 
     class Meta:
         verbose_name = 'рецепт'
@@ -121,6 +129,19 @@ class Recipe(BaseModel):
 
     def __str__(self):
         return self.name
+
+    def generate_short_code(self):
+        """Генерирует уникальный короткий код."""
+        while True:
+            short_code = get_random_string(length=10)
+            if not Recipe.objects.filter(short_code=short_code).exists():
+                return short_code
+            
+    def save(self, *args, **kwargs):
+        """Переопределяем метод save для генерации короткого кода."""
+        if not self.short_code:
+            self.short_code = self.generate_short_code()
+        super().save(*args, **kwargs)
 
 
 class RecipeIngredient(BaseModel):
@@ -148,7 +169,7 @@ class RecipeIngredient(BaseModel):
         verbose_name_plural = 'Ингредиенты в рецептах'
         constraints = [
             models.UniqueConstraint(
-                fields=['ingredient', 'recipe'],
+                fields=('ingredient', 'recipe'),
                 name='unique_ingredient_in_recipe'
             )
         ]
@@ -182,7 +203,7 @@ class Favorite(BaseModel):
         verbose_name_plural = 'Избранные'
         constraints = [
             models.UniqueConstraint(
-                fields=['user', 'recipe'],
+                fields=('user', 'recipe'),
                 name='unique_favorite'
             )
         ]
@@ -213,7 +234,7 @@ class ShoppingCart(BaseModel):
         verbose_name_plural = 'Корзина покупок'
         constraints = [
             models.UniqueConstraint(
-                fields=['user', 'recipe'],
+                fields=('user', 'recipe'),
                 name='unique_shopping_cart'
             )
         ]
