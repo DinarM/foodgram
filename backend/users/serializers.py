@@ -14,75 +14,6 @@ from .models import Subscription
 User = get_user_model()
 
 
-# class CustomUserCreateSerializer(UserCreateSerializer):
-#     """
-#     Кастомный сериализатор для создания пользователя.
-#     Добавляет валидацию для поля username.
-#     """
-#     class Meta:
-#         model = User
-#         fields = (
-#             'id', 'username', 'first_name', 'last_name',
-#             'email', 'password'
-#         )
-
-#     def validate_username(self, value):
-#         """
-#         Проверка, что имя пользователя соответствует заданному регулярному
-#         выражению.
-#         """
-#         if not re.match(r'^[\w.@+-]+\Z', value):
-#             raise ValidationError(
-#                 "Имя пользователя может содержать только буквы, "
-#                 "цифры и символы @/./+/-/_."
-#             )
-#         return value
-
-#     def validate(self, attrs):
-#         """
-#         Проверка, что все обязательные поля заполнены.
-#         """
-#         required_fields = [
-#             'username', 'first_name', 'last_name', 'email', 'password'
-#         ]
-#         for field in required_fields:
-#             if not attrs.get(field):
-#                 raise serializers.ValidationError({
-#                     field: f"{field} является обязательным."
-#                 })
-#         return super().validate(attrs)
-
-
-# class CustomUserPasswordSerializer(serializers.Serializer):
-#     """
-#     Сериализатор для изменения пароля пользователя.
-#     """
-#     current_password = serializers.CharField(required=True)
-#     new_password = serializers.CharField(required=True)
-
-#     def validate_current_password(self, value):
-#         """
-#         Проверяет, что текущий пароль введен верно.
-#         """
-#         user = self.context['request'].user
-#         if not user.check_password(value):
-#             raise serializers.ValidationError("Текущий пароль неверен.")
-#         return value
-
-#     def validate_new_password(self, value):
-#         """
-#         Проверка нового пароля на соответствие стандартам безопасности
-#         и на отличие от текущего пароля.
-#         """
-#         user = self.context['request'].user
-#         if user.check_password(value):
-#             raise serializers.ValidationError(
-#                 "Новый пароль не должен соответствовать старому."
-#             )
-#         validate_password(value)
-#         return value
-
-
 class UserSerializer(serializers.ModelSerializer):
     """
     Кастомный сериализатор для отображения пользователя.
@@ -211,15 +142,15 @@ class SubscribeSerializer(serializers.ModelSerializer):
         """
         subscribed_to_user_id = self.initial_data.get('subscribed_to') 
         current_user = self.context['request'].user
-
+        
         subscribed_to_user = get_object_or_404(User, id=subscribed_to_user_id)
-
+        print(subscribed_to_user_id)
         if Subscription.objects.filter(user=current_user, subscribed_to=subscribed_to_user).exists():
             raise serializers.ValidationError(
                 "Вы уже подписаны на этого пользователя."
             )
-        
-        if current_user == subscribed_to_user:
+       
+        if current_user.id == subscribed_to_user.id:
            raise serializers.ValidationError(
                 "Нельзя подписаться на самого себя."
             )

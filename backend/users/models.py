@@ -1,9 +1,10 @@
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework.exceptions import ValidationError as DRFValidationError
+from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
+from django.db.models import Q, F, CheckConstraint
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
-import re
 
 
 class BaseModel(models.Model):
@@ -27,8 +28,12 @@ class User(AbstractUser, BaseModel):
     """
     Модель пользователя.
     """
-    email = models.EmailField(max_length=254, unique=True)
-    username = models.CharField(max_length=150, unique=True)
+    email = models.EmailField(unique=True)
+    username = models.CharField(
+        max_length=150,
+        unique=True,
+        validators=[UnicodeUsernameValidator()],
+    )
     avatar = models.ImageField(
         upload_to='users/avatars/',
         verbose_name='аватар',
@@ -57,10 +62,6 @@ class User(AbstractUser, BaseModel):
             value = getattr(self, field)
             if not value:
                 raise ValidationError({field: f"{field} является обязательным."})
-
-        if not re.match(r'^[\w.@+-]+\Z', self.username):
-            raise ValidationError({
-                'username': "Имя пользователя может содержать только буквы, цифры и символы @/./+/-/_."})
 
     def save(self, *args, **kwargs):
         """
@@ -96,14 +97,12 @@ class Subscription(BaseModel):
             models.UniqueConstraint(
                 fields=('user', 'subscribed_to'),
                 name='unique_subscription'
-            )
+            ),
+            CheckConstraint(
+                check=~Q(user=F('subscribed_to')),
+                name='user_cannot_subscribe_to_self'
+            ),
         ]
-
-    def clean(self):
-        if self.user == self.subscribed_to:
-            raise ValidationError(
-                'Нельзя подписаться на самого себя.'
-            )
 
     def __str__(self):
         return f'{self.user} подписан на {self.subscribed_to}'
