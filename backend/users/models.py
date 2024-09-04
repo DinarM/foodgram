@@ -6,6 +6,8 @@ from django.db.models import Q, F, CheckConstraint
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 
+from foodgram.constants import USER_USERNAME_SIZE
+
 
 class BaseModel(models.Model):
     """
@@ -30,7 +32,7 @@ class User(AbstractUser, BaseModel):
     """
     email = models.EmailField(unique=True)
     username = models.CharField(
-        max_length=150,
+        max_length=USER_USERNAME_SIZE,
         unique=True,
         validators=[UnicodeUsernameValidator()],
     )

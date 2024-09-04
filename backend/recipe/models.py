@@ -3,6 +3,8 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.utils.crypto import get_random_string
 
+from foodgram.constants import INGREDIENT_MEASUREMENT_UNIT_SIZE, INGREDIENT_NAME_SIZE, RECIPE_NAME_SIZE, RECIPE_SHORT_CODE_SIZE, TAG_NAME_SIZE, TAG_SLUG_SIZE
+
 User = get_user_model()
 
 
@@ -41,11 +43,11 @@ class Ingredient(BaseModel):
     Модель ингредиента.
     """
     name = models.CharField(
-        max_length=128,
+        max_length=INGREDIENT_NAME_SIZE,
         verbose_name='Название'
     )
     measurement_unit = models.CharField(
-        max_length=64,
+        max_length=INGREDIENT_MEASUREMENT_UNIT_SIZE,
         verbose_name='Единица измерения'
     )
 
@@ -62,11 +64,11 @@ class Tag(BaseModel):
     Модель тега.
     """
     name = models.CharField(
-        max_length=32,
+        max_length=TAG_NAME_SIZE,
         verbose_name='Название'
     )
     slug = models.SlugField(
-        max_length=32,
+        max_length=TAG_SLUG_SIZE,
         verbose_name='Слаг',
         unique=True
     )
@@ -84,7 +86,7 @@ class Recipe(BaseModel):
     Модель рецепта.
     """
     name = models.CharField(
-        max_length=256,
+        max_length=RECIPE_NAME_SIZE,
         verbose_name='Название'
     )
     author = models.ForeignKey(
@@ -116,7 +118,7 @@ class Recipe(BaseModel):
         validators=[validate_positive_integer]
     )
     short_code = models.CharField(
-        max_length=10,
+        max_length=RECIPE_SHORT_CODE_SIZE,
         unique=True,
         blank=True,
         null=True,
