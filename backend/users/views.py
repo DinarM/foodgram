@@ -72,15 +72,13 @@ class UserViewSet(UserViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-
-class UserAvatarUpdateView(APIView):
-    """
-    Вьюсет для обновления и удаления аватара пользователя.
-    """
-    permission_classes = [IsAuthenticated]
-    pagination_class = LimitOffsetPagination
-
-    def put(self, request, *args, **kwargs):
+    @action(
+        detail=False,
+        methods=['put'],
+        url_path='me/avatar',
+        permission_classes=(IsAuthenticated,)
+    )
+    def avatar(self, request, pk=None):
         """
         Обработка PUT запроса для обновления аватара текущего пользователя.
         """
@@ -93,9 +91,10 @@ class UserAvatarUpdateView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, *args, **kwargs):
+    @avatar.mapping.delete
+    def delete_avatar(self, request, pk=None):
         """
-        Обработка DELETE запроса для удаления аватара текущего пользователя.
+        Удаляет аватар пользователя.
         """
         user = request.user
         user.avatar = None
