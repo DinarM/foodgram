@@ -1,24 +1,11 @@
 from django.db import models
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils.crypto import get_random_string
 
-from foodgram.constants import INGREDIENT_MEASUREMENT_UNIT_SIZE, INGREDIENT_NAME_SIZE, RECIPE_NAME_SIZE, RECIPE_SHORT_CODE_SIZE, TAG_NAME_SIZE, TAG_SLUG_SIZE
+from foodgram.constants import INGREDIENT_MEASUREMENT_UNIT_SIZE, INGREDIENT_NAME_SIZE, MAX_VALUE_VALIDATOR, MIN_VALUE_VALIDATOR, RECIPE_NAME_SIZE, RECIPE_SHORT_CODE_SIZE, TAG_NAME_SIZE, TAG_SLUG_SIZE
 
 User = get_user_model()
-
-
-def validate_positive_integer(value):
-    """
-    Валидатор для проверки, что значение больше нуля.
-    Вызывает:
-        ValidationError: Если значение меньше или равно 0.
-    """
-    if value <= 0:
-        raise ValidationError(
-            'Значение не может быть равно 0 или быть отрицательным.',
-            params={'value': value},
-        )
 
 
 class BaseModel(models.Model):
@@ -54,9 +41,15 @@ class Ingredient(BaseModel):
     class Meta:
         verbose_name = 'ингредиент'
         verbose_name_plural = 'Ингредиенты'
+        constraints = [
+            models.UniqueConstraint(
+                fields=('name', 'measurement_unit'),
+                name='unique_ingredient_in_ingredient'
+            )
+        ]
 
     def __str__(self):
-        return self.name
+        return f"{self.name} ({self.measurement_unit})"
 
 
 class Tag(BaseModel):
@@ -115,7 +108,16 @@ class Recipe(BaseModel):
     )
     cooking_time = models.PositiveSmallIntegerField(
         verbose_name='время приготовления',
-        validators=[validate_positive_integer]
+        validators=[
+            MinValueValidator(
+                MIN_VALUE_VALIDATOR,
+                message='Время не может быть равно 0 или быть отрицательным.'
+            ),
+            MaxValueValidator(
+                MAX_VALUE_VALIDATOR,
+                message=f'Время приготовления не может превышать {MAX_VALUE_VALIDATOR} минут.'
+            )
+        ]
     )
     short_code = models.CharField(
         max_length=RECIPE_SHORT_CODE_SIZE,
@@ -130,7 +132,7 @@ class Recipe(BaseModel):
         verbose_name_plural = 'Рецепты'
 
     def __str__(self):
-        return self.name
+        return f"{self.name} by {self.author}"
 
     def generate_short_code(self):
         """Генерирует уникальный короткий код."""
@@ -163,7 +165,10 @@ class RecipeIngredient(BaseModel):
     )
     amount = models.PositiveSmallIntegerField(
         verbose_name='количество',
-        validators=[validate_positive_integer]
+        validators=[MinValueValidator(
+            0.01,
+            message="Количество не может быть равно 0 или быть отрицательным."
+            )]
     )
 
     class Meta:
