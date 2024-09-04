@@ -1,15 +1,10 @@
-import re
-
-from djoser.serializers import UserCreateSerializer, UserSerializer
 from django.contrib.auth import get_user_model
-from django.contrib.auth.password_validation import validate_password
-# from django.core.exceptions import ValidationError
-from rest_framework import serializers
-from drf_extra_fields.fields import Base64ImageField
 from django.shortcuts import get_object_or_404
+from djoser.serializers import UserSerializer
+from drf_extra_fields.fields import Base64ImageField
+from rest_framework import serializers
 
 from .models import Subscription
-
 
 User = get_user_model()
 
@@ -37,10 +32,10 @@ class UserSerializer(serializers.ModelSerializer):
         """
         request = self.context.get('request')
         return (
-            request 
-            and request.user.is_authenticated 
+            request
+            and request.user.is_authenticated
             and Subscription.objects.filter(
-            user=request.user, subscribed_to=obj
+                user=request.user, subscribed_to=obj
             ).exists()
         )
 
@@ -140,18 +135,18 @@ class SubscribeSerializer(serializers.ModelSerializer):
         """
         Проверка на уникальность подписки и само-подписку.
         """
-        subscribed_to_user_id = self.initial_data.get('subscribed_to') 
+        subscribed_to_user_id = self.initial_data.get('subscribed_to')
         current_user = self.context['request'].user
-        
+
         subscribed_to_user = get_object_or_404(User, id=subscribed_to_user_id)
         print(subscribed_to_user_id)
         if Subscription.objects.filter(user=current_user, subscribed_to=subscribed_to_user).exists():
             raise serializers.ValidationError(
                 "Вы уже подписаны на этого пользователя."
             )
-       
+
         if current_user.id == subscribed_to_user.id:
-           raise serializers.ValidationError(
+            raise serializers.ValidationError(
                 "Нельзя подписаться на самого себя."
             )
 

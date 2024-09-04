@@ -1,20 +1,15 @@
+from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
 from rest_framework import status, viewsets
-from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import LimitOffsetPagination
-from django.contrib.auth import get_user_model
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from .models import Subscription
-
-from .serializers import (
-    UserSerializer, SubscriptionSerializer,
-    UserAvatarUpdateSerializer,
-    SubscribeSerializer
-)
+from .serializers import (SubscribeSerializer, SubscriptionSerializer,
+                          UserAvatarUpdateSerializer, UserSerializer)
 
 User = get_user_model()
 
@@ -39,7 +34,7 @@ class UserViewSet(UserViewSet):
         """
         current_user = request.user
         subscribed_to_user = get_object_or_404(User, id=id)
-        
+
         data = {
             'user': current_user.id,
             'subscribed_to': subscribed_to_user.id

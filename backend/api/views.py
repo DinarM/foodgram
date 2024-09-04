@@ -1,21 +1,19 @@
 from django.db.models import Sum
 from django.http import HttpResponse
-from rest_framework import viewsets, status
-from rest_framework.response import Response
+from django.shortcuts import get_object_or_404, redirect
+from django_filters.rest_framework import DjangoFilterBackend
+from recipe.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
-from django_filters.rest_framework import DjangoFilterBackend
-from django.shortcuts import get_object_or_404, redirect
+from rest_framework.response import Response
 
-from .serializers import (
-    TagSerializer, IngredientSerializer, RecipeReadSerializer,
-    RecipeWriteSerializer, FavoriteSerializer, ShoppingCartSerializer
-)
-from recipe.models import Tag, Ingredient, Recipe, Favorite, ShoppingCart
-from .filters import RecipeFilter, IngredientFilter
+from .filters import IngredientFilter, RecipeFilter
 from .pagination import CustomPageNumberPagination
 from .permissions import IsAuthorOrReadOnly
-
+from .serializers import (FavoriteSerializer, IngredientSerializer,
+                          RecipeReadSerializer, RecipeWriteSerializer,
+                          ShoppingCartSerializer, TagSerializer)
 
 
 def redirect_to_recipe(request, short_code):
@@ -83,7 +81,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         data = {'recipe': recipe.id}
 
         serializer = FavoriteSerializer(data=data, context={'request': request})
-        
+
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -128,8 +126,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
 
     @shopping_cart.mapping.delete
     def delete_shopping_cart(self, request, pk=None):

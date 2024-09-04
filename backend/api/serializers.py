@@ -1,10 +1,8 @@
-from rest_framework import serializers
-from drf_extra_fields.fields import Base64ImageField
 from django.shortcuts import get_object_or_404
-
-from recipe.models import (
-    Tag, Ingredient, Recipe, RecipeIngredient, Favorite, ShoppingCart
-)
+from drf_extra_fields.fields import Base64ImageField
+from recipe.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
+                           ShoppingCart, Tag)
+from rest_framework import serializers
 from users.serializers import UserSerializer
 
 
@@ -77,8 +75,8 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         """Возвращает True, если рецепт в избранном у пользователя."""
         request = self.context.get('request')
         return (
-            request 
-            and request.user.is_authenticated 
+            request
+            and request.user.is_authenticated
             and request.user.favorites.filter(recipe=obj).exists()
         )
 
@@ -86,8 +84,8 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         """Возвращает True, если рецепт в корзине у пользователя."""
         request = self.context.get('request')
         return (
-            request 
-            and request.user.is_authenticated 
+            request
+            and request.user.is_authenticated
             and request.user.shopping_carts.filter(user=request.user, recipe=obj).exists()
         )
 
@@ -179,7 +177,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
                 amount=ingredient_data['amount']
             )
             recipe_ingredients.append(recipe_ingredient)
-        
+
         RecipeIngredient.objects.bulk_create(recipe_ingredients)
 
     def to_representation(self, instance):
@@ -203,7 +201,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
         """
         Проверка на наличие дубликатов рецептов в избранном.
         """
-        recipe_id = self.initial_data.get('recipe') 
+        recipe_id = self.initial_data.get('recipe')
         user = self.context['request'].user
 
         recipe = get_object_or_404(Recipe, id=recipe_id)
@@ -250,7 +248,7 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
         """
         Проверка на наличие дубликатов рецептов в корзине.
         """
-        recipe_id = self.initial_data.get('recipe') 
+        recipe_id = self.initial_data.get('recipe')
         user = self.context['request'].user
 
         recipe = get_object_or_404(Recipe, id=recipe_id)

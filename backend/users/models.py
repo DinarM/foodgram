@@ -1,10 +1,10 @@
-from django.core.exceptions import ValidationError as DjangoValidationError
-from rest_framework.exceptions import ValidationError as DRFValidationError
-from django.contrib.auth.validators import UnicodeUsernameValidator
-from django.db import models
-from django.db.models import Q, F, CheckConstraint
 from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db import models
+from django.db.models import CheckConstraint, F, Q
+from rest_framework.exceptions import ValidationError as DRFValidationError
 
 from foodgram.constants import USER_USERNAME_SIZE
 
@@ -40,7 +40,7 @@ class User(AbstractUser, BaseModel):
         upload_to='users/avatars/',
         verbose_name='аватар',
         blank=True,
-        null=True    
+        null=True
     )
 
     USERNAME_FIELD = 'email'
@@ -74,6 +74,7 @@ class User(AbstractUser, BaseModel):
         except DjangoValidationError as e:
             raise DRFValidationError(e.message_dict)
         super().save(*args, **kwargs)
+
 
 class Subscription(BaseModel):
     """

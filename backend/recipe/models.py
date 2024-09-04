@@ -1,9 +1,13 @@
-from django.db import models
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import models
 from django.utils.crypto import get_random_string
 
-from foodgram.constants import INGREDIENT_MEASUREMENT_UNIT_SIZE, INGREDIENT_NAME_SIZE, MAX_VALUE_VALIDATOR, MIN_VALUE_VALIDATOR, RECIPE_NAME_SIZE, RECIPE_SHORT_CODE_SIZE, TAG_NAME_SIZE, TAG_SLUG_SIZE
+from foodgram.constants import (INGREDIENT_MEASUREMENT_UNIT_SIZE,
+                                INGREDIENT_NAME_SIZE, MAX_VALUE_VALIDATOR,
+                                MIN_VALUE_VALIDATOR, RECIPE_NAME_SIZE,
+                                RECIPE_SHORT_CODE_SIZE, TAG_NAME_SIZE,
+                                TAG_SLUG_SIZE)
 
 User = get_user_model()
 
@@ -140,7 +144,7 @@ class Recipe(BaseModel):
             short_code = get_random_string(length=10)
             if not Recipe.objects.filter(short_code=short_code).exists():
                 return short_code
-            
+
     def save(self, *args, **kwargs):
         """Переопределяем метод save для генерации короткого кода."""
         if not self.short_code:
@@ -168,7 +172,8 @@ class RecipeIngredient(BaseModel):
         validators=[MinValueValidator(
             0.01,
             message="Количество не может быть равно 0 или быть отрицательным."
-            )]
+        )
+        ]
     )
 
     class Meta:
@@ -186,7 +191,6 @@ class RecipeIngredient(BaseModel):
             f'{self.ingredient.name} {self.amount} '
             f'добавлен в {self.recipe.name}'
         )
-
 
 
 class UserRecipeBase(BaseModel):
@@ -221,7 +225,7 @@ class Favorite(UserRecipeBase):
     """
     Модель избранного.
     """
-    
+
     class Meta(UserRecipeBase.Meta):
         default_related_name = 'favorites'
         verbose_name = 'избранное'
@@ -236,11 +240,12 @@ class Favorite(UserRecipeBase):
     def __str__(self):
         return f'{self.user} добавил в избранное {self.recipe.name}'
 
+
 class ShoppingCart(UserRecipeBase):
     """
     Модель корзины покупок.
     """
-    
+
     class Meta(UserRecipeBase.Meta):
         default_related_name = 'shopping_carts'
         verbose_name = 'корзина покупок'
@@ -254,4 +259,3 @@ class ShoppingCart(UserRecipeBase):
 
     def __str__(self):
         return f'{self.user} добавил в корзину {self.recipe.name}'
-

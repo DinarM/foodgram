@@ -1,10 +1,11 @@
 import os
-from dotenv import load_dotenv
 from pathlib import Path
+
+from django.core.management.utils import get_random_secret_key
+from dotenv import load_dotenv
 
 load_dotenv()
 
-from django.core.management.utils import get_random_secret_key
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -122,7 +123,7 @@ DJOSER = {
         'current_user': 'users.serializers.UserSerializer',
     },
     'PERMISSIONS': {
-        'current_user': ['rest_framework.permissions.IsAuthenticated'], 
+        'current_user': ['rest_framework.permissions.IsAuthenticated'],
         'user': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
         'user_list': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
     },
