@@ -4,6 +4,10 @@ from .models import (
     Recipe, Ingredient, Tag, RecipeIngredient, Favorite, ShoppingCart
 )
 
+class IngredientInline(admin.TabularInline):
+    model = RecipeIngredient
+    min_num = 1
+
 
 class RecipeAdmin(admin.ModelAdmin):
     list_display = ('name', 'author', 'favorite_count')
@@ -12,6 +16,10 @@ class RecipeAdmin(admin.ModelAdmin):
     list_filter = ('tags',)
     filter_horizontal = ('tags', 'ingredients',)
     empty_value_display = 'Не задано'
+
+    inlines = [
+        IngredientInline,
+    ]
 
     def favorite_count(self, obj):
         return Favorite.objects.filter(recipe=obj).count()
