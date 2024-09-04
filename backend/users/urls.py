@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
-from .views import CustomUserViewSet, UserAvatarUpdateView, SubscriptionViewSet
+from .views import UserViewSet, UserAvatarUpdateView, SubscriptionViewSet
 
 
 app_name = 'users'
@@ -10,7 +10,7 @@ router = DefaultRouter()
 router.register(
     'users/subscriptions', SubscriptionViewSet, basename='subscriptions'
 )
-router.register('users', CustomUserViewSet, basename='users')
+router.register('users', UserViewSet, basename='users')
 
 urlpatterns = [
     path('', include(router.urls)),

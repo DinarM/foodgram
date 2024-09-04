@@ -1,6 +1,9 @@
+from django.core.exceptions import ValidationError as DjangoValidationError
+from rest_framework.exceptions import ValidationError as DRFValidationError
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
+import re
 
 
 class BaseModel(models.Model):
@@ -28,7 +31,9 @@ class User(AbstractUser, BaseModel):
     username = models.CharField(max_length=150, unique=True)
     avatar = models.ImageField(
         upload_to='users/avatars/',
-        verbose_name='аватар'
+        verbose_name='аватар',
+        blank=True,
+        null=True    
     )
 
     USERNAME_FIELD = 'email'
@@ -41,6 +46,31 @@ class User(AbstractUser, BaseModel):
     def __str__(self):
         return self.email
 
+    def clean(self):
+        """
+        Проверка обязательных полей и формат username.
+        """
+        super().clean()
+
+        required_fields = ('username', 'first_name', 'last_name', 'email')
+        for field in required_fields:
+            value = getattr(self, field)
+            if not value:
+                raise ValidationError({field: f"{field} является обязательным."})
+
+        if not re.match(r'^[\w.@+-]+\Z', self.username):
+            raise ValidationError({
+                'username': "Имя пользователя может содержать только буквы, цифры и символы @/./+/-/_."})
+
+    def save(self, *args, **kwargs):
+        """
+        Переопределение метода save для выполнения полной валидации.
+        """
+        try:
+            self.full_clean()
+        except DjangoValidationError as e:
+            raise DRFValidationError(e.message_dict)
+        super().save(*args, **kwargs)
 
 class Subscription(BaseModel):
     """

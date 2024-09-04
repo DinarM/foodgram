@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
 from rest_framework import status, viewsets
 from rest_framework.views import APIView
@@ -10,88 +11,66 @@ from django.contrib.auth import get_user_model
 from .models import Subscription
 
 from .serializers import (
-    CustomUserSerializer, CustomUserCreateSerializer, SubscriptionSerializer,
-    UserAvatarUpdateSerializer, CustomUserPasswordSerializer,
+    UserSerializer, SubscriptionSerializer,
+    UserAvatarUpdateSerializer,
     SubscribeSerializer
 )
 
 User = get_user_model()
 
 
-class CustomUserViewSet(UserViewSet):
+class UserViewSet(UserViewSet):
     """
     Кастомный вьюсет для работы с пользователями.
     """
-    serializer_class = CustomUserSerializer
+    serializer_class = UserSerializer
     pagination_class = LimitOffsetPagination
-
-    def get_serializer_class(self):
-        """
-        Возвращает соответствующий сериализатор в зависимости от действия.
-        """
-        if self.action == 'create':
-            return CustomUserCreateSerializer
-        elif self.action == 'set_password':
-            return CustomUserPasswordSerializer
-        return CustomUserSerializer
+    queryset = User.objects.all()
 
     @action(
         detail=True,
-        methods=['post', 'delete'],
+        methods=['post'],
         url_path='subscribe',
         permission_classes=(IsAuthenticated,)
     )
     def subscribe(self, request, id=None):
         """
-        Создает или удаляет подписку на другого пользователя.
+        Создает подписку на другого пользователя.
         """
         current_user = request.user
+        subscribed_to_user = get_object_or_404(User, id=id)
+        
+        data = {
+            'user': current_user.id,
+            'subscribed_to': subscribed_to_user.id
+        }
 
-        if not User.objects.filter(id=id).exists():
-            return Response(
-                {"detail": "Страница не найдена."},
-                status=status.HTTP_404_NOT_FOUND
-            )
+        serializer = SubscribeSerializer(data=data, context={'request': request})
 
-        subscribed_to_user = User.objects.get(id=id)
-
-        if request.method == 'POST':
-            if current_user.id == int(id):
-                return Response(
-                    {"detail": "Нельзя подписаться на самого себя."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            if Subscription.objects.filter(
-                user=current_user, subscribed_to=subscribed_to_user
-            ).exists():
-                return Response(
-                    {"detail": "Вы уже подписаны на этого пользователя."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            subscription = Subscription.objects.create(
-                user=current_user,
-                subscribed_to=subscribed_to_user
-            )
-            serializer = SubscribeSerializer(
-                subscription, context={'request': request}
-            )
+        if serializer.is_valid():
+            serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        if request.method == 'DELETE':
-            try:
-                subscription = Subscription.objects.get(
-                    user=current_user,
-                    subscribed_to=subscribed_to_user
-                )
-                subscription.delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            except Subscription.DoesNotExist:
-                return Response(
-                    {"detail": "Вы не подписаны на этого пользователя."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+    @subscribe.mapping.delete
+    def delete_subscribe(self, request, id=None):
+        """
+        Удаляет подписку на другого пользователя.
+        """
+        current_user = request.user
+        subscribed_to_user = get_object_or_404(User, id=id)
+        delete_cnt, _ = Subscription.objects.filter(
+            user=current_user, subscribed_to=subscribed_to_user
+        ).delete()
+
+        if delete_cnt > 0:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response(
+                {"detail": "Вы не подписаны на этого пользователя."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 class UserAvatarUpdateView(APIView):

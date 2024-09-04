@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404
 from recipe.models import (
     Tag, Ingredient, Recipe, RecipeIngredient, Favorite, ShoppingCart
 )
-from users.serializers import CustomUserSerializer
+from users.serializers import UserSerializer
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -58,7 +58,7 @@ class RecipeSimpleSerializer(serializers.ModelSerializer):
 
 class RecipeReadSerializer(serializers.ModelSerializer):
     """Сериализатор для чтения рецепта."""
-    author = CustomUserSerializer(read_only=True)
+    author = UserSerializer(read_only=True)
     tags = TagSerializer(read_only=True, many=True)
     ingredients = RecipeIngredientSerializer(
         source='recipe_ingredients', read_only=True, many=True
