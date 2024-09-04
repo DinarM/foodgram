@@ -188,24 +188,42 @@ class RecipeIngredient(BaseModel):
         )
 
 
-class Favorite(BaseModel):
+
+class UserRecipeBase(BaseModel):
     """
-    Модель избранного.
+    Базовая модель для связи пользователя с рецептом.
     """
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='favorites',
         verbose_name='пользователь'
     )
     recipe = models.ForeignKey(
-        Recipe,
+        'Recipe',
         on_delete=models.CASCADE,
-        related_name='favorites',
         verbose_name='рецепт'
     )
 
     class Meta:
+        abstract = True
+        constraints = [
+            models.UniqueConstraint(
+                fields=('user', 'recipe'),
+                name='unique_user_recipe'
+            )
+        ]
+
+    def __str__(self):
+        return f'{self.user} связан с {self.recipe.name}'
+
+
+class Favorite(UserRecipeBase):
+    """
+    Модель избранного.
+    """
+    
+    class Meta(UserRecipeBase.Meta):
+        default_related_name = 'favorites'
         verbose_name = 'избранное'
         verbose_name_plural = 'Избранные'
         constraints = [
@@ -218,25 +236,13 @@ class Favorite(BaseModel):
     def __str__(self):
         return f'{self.user} добавил в избранное {self.recipe.name}'
 
-
-class ShoppingCart(BaseModel):
+class ShoppingCart(UserRecipeBase):
     """
     Модель корзины покупок.
     """
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='shopping_carts',
-        verbose_name='пользователь'
-    )
-    recipe = models.ForeignKey(
-        Recipe,
-        on_delete=models.CASCADE,
-        related_name='shopping_carts',
-        verbose_name='рецепт'
-    )
-
-    class Meta:
+    
+    class Meta(UserRecipeBase.Meta):
+        default_related_name = 'shopping_carts'
         verbose_name = 'корзина покупок'
         verbose_name_plural = 'Корзина покупок'
         constraints = [
@@ -248,3 +254,4 @@ class ShoppingCart(BaseModel):
 
     def __str__(self):
         return f'{self.user} добавил в корзину {self.recipe.name}'
+
