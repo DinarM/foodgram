@@ -29,7 +29,6 @@ class RecipeFilter(django_filters.FilterSet):
 
     def filter_is_in_shopping_cart(self, queryset, name, value):
         """Фильтрует рецепты по статусу 'в корзине покупок'."""
-
         user = self.request.user
         if user.is_anonymous:
             return queryset

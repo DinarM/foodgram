@@ -412,7 +412,6 @@ class SubscribeSerializer(serializers.ModelSerializer):
         current_user = self.context['request'].user
 
         subscribed_to_user = get_object_or_404(User, id=subscribed_to_user_id)
-        print(subscribed_to_user_id)
         if Subscription.objects.filter(user=current_user, subscribed_to=subscribed_to_user).exists():
             raise serializers.ValidationError(
                 "Вы уже подписаны на этого пользователя."

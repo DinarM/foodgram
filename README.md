@@ -8,9 +8,9 @@ Foodgram — это удобный помощник в планировании 
 - Создать и запустить контейнеры Docker:
   sudo docker compose up -d
 - Выполнить миграции:
-  sudo docker compose exec backend python manage.py migrate
+  sudo docker exec -it foodgram-backend python manage.py migrate
 - Собрать статику:
-  sudo docker compose exec backend python manage.py collectstatic
+  sudo docker exec -it foodgram-backend python manage.py collectstatic
 - Заполнить базу данных с ингредиентами из файла ingredients.csv и тегами из файла tags.csv:
   sudo docker exec -it foodgram-backend python manage.py load_ingredients_data
   sudo docker exec -it foodgram-backend python manage.py load_tags_data
