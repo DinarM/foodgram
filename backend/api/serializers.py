@@ -4,6 +4,7 @@ from drf_extra_fields.fields import Base64ImageField
 from recipe.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                            ShoppingCart, Tag)
 from rest_framework import serializers
+
 from users.models import Subscription
 
 User = get_user_model()
@@ -142,7 +143,9 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         return (
             request
             and request.user.is_authenticated
-            and request.user.shopping_carts.filter(user=request.user, recipe=obj).exists()
+            and request.user.shopping_carts.filter(
+                user=request.user, recipe=obj
+            ).exists()
         )
 
 
@@ -412,7 +415,9 @@ class SubscribeSerializer(serializers.ModelSerializer):
         current_user = self.context['request'].user
 
         subscribed_to_user = get_object_or_404(User, id=subscribed_to_user_id)
-        if Subscription.objects.filter(user=current_user, subscribed_to=subscribed_to_user).exists():
+        if Subscription.objects.filter(
+            user=current_user, subscribed_to=subscribed_to_user
+        ).exists():
             raise serializers.ValidationError(
                 "Вы уже подписаны на этого пользователя."
             )

@@ -10,8 +10,8 @@ from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from users.models import Subscription
 
+from users.models import Subscription
 from .filters import IngredientFilter, RecipeFilter
 from .pagination import CustomPageNumberPagination
 from .permissions import IsAuthorOrReadOnly
@@ -89,13 +89,17 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
         data = {'recipe': recipe.id}
 
-        serializer = FavoriteSerializer(data=data, context={'request': request})
+        serializer = FavoriteSerializer(
+            data=data, context={'request': request}
+        )
 
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                serializer.errors, status=status.HTTP_400_BAD_REQUEST
+            )
 
     @favorite.mapping.delete
     def delete_favorite(self, request, pk=None):
@@ -128,13 +132,17 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
         data = {'recipe': recipe.id}
 
-        serializer = ShoppingCartSerializer(data=data, context={'request': request})
+        serializer = ShoppingCartSerializer(
+            data=data, context={'request': request}
+        )
 
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                serializer.errors, status=status.HTTP_400_BAD_REQUEST
+            )
 
     @shopping_cart.mapping.delete
     def delete_shopping_cart(self, request, pk=None):
@@ -212,13 +220,17 @@ class UserViewSet(UserViewSet):
             'subscribed_to': subscribed_to_user.id
         }
 
-        serializer = SubscribeSerializer(data=data, context={'request': request})
+        serializer = SubscribeSerializer(
+            data=data, context={'request': request}
+        )
 
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                serializer.errors, status=status.HTTP_400_BAD_REQUEST
+            )
 
     @subscribe.mapping.delete
     def delete_subscribe(self, request, id=None):
