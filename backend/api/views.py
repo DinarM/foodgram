@@ -54,11 +54,16 @@ class RecipeViewSet(viewsets.ModelViewSet):
     Вьюсет для управления рецептами.
     """
     serializer_class = RecipeReadSerializer
-    queryset = Recipe.objects.all()
     pagination_class = CustomPageNumberPagination
     filter_backends = [DjangoFilterBackend]
     filterset_class = RecipeFilter
     permission_classes = [IsAuthorOrReadOnly]
+
+    def get_queryset(self):
+        """
+        Возвращает отсортированный по убыванию id queryset.
+        """
+        return Recipe.objects.all().order_by('-id')
 
     def get_serializer_class(self):
         """
