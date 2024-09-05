@@ -63,7 +63,9 @@ class User(AbstractUser, BaseModel):
         for field in required_fields:
             value = getattr(self, field)
             if not value:
-                raise ValidationError({field: f"{field} является обязательным."})
+                raise ValidationError(
+                    {field: f"{field} является обязательным."}
+                )
 
     def save(self, *args, **kwargs):
         """
