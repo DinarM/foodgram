@@ -1,6 +1,12 @@
-from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db import models
+from django.db.models import CheckConstraint, F, Q
+from rest_framework.exceptions import ValidationError as DRFValidationError
+
+from foodgram.constants import USER_USERNAME_SIZE
 
 
 class BaseModel(models.Model):
@@ -24,15 +30,21 @@ class User(AbstractUser, BaseModel):
     """
     Модель пользователя.
     """
-    email = models.EmailField(max_length=254, unique=True)
-    username = models.CharField(max_length=150, unique=True)
+    email = models.EmailField(unique=True)
+    username = models.CharField(
+        max_length=USER_USERNAME_SIZE,
+        unique=True,
+        validators=[UnicodeUsernameValidator()],
+    )
     avatar = models.ImageField(
         upload_to='users/avatars/',
-        verbose_name='аватар'
+        verbose_name='аватар',
+        blank=True,
+        null=True
     )
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
+    REQUIRED_FIELDS = ('username', 'first_name', 'last_name')
 
     class Meta:
         verbose_name = 'пользователь'
@@ -40,6 +52,28 @@ class User(AbstractUser, BaseModel):
 
     def __str__(self):
         return self.email
+
+    def clean(self):
+        """
+        Проверка обязательных полей и формат username.
+        """
+        super().clean()
+
+        required_fields = ('username', 'first_name', 'last_name', 'email')
+        for field in required_fields:
+            value = getattr(self, field)
+            if not value:
+                raise ValidationError({field: f"{field} является обязательным."})
+
+    def save(self, *args, **kwargs):
+        """
+        Переопределение метода save для выполнения полной валидации.
+        """
+        try:
+            self.full_clean()
+        except DjangoValidationError as e:
+            raise DRFValidationError(e.message_dict)
+        super().save(*args, **kwargs)
 
 
 class Subscription(BaseModel):
@@ -64,16 +98,14 @@ class Subscription(BaseModel):
         verbose_name_plural = 'Подписки'
         constraints = [
             models.UniqueConstraint(
-                fields=['user', 'subscribed_to'],
+                fields=('user', 'subscribed_to'),
                 name='unique_subscription'
-            )
+            ),
+            CheckConstraint(
+                check=~Q(user=F('subscribed_to')),
+                name='user_cannot_subscribe_to_self'
+            ),
         ]
-
-    def clean(self):
-        if self.user == self.subscribed_to:
-            raise ValidationError(
-                'Нельзя подписаться на самого себя.'
-            )
 
     def __str__(self):
         return f'{self.user} подписан на {self.subscribed_to}'

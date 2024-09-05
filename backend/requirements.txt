@@ -6,3 +6,5 @@ djangorestframework==3.12.4
 djoser==2.2.3
 django-filter==23.1
 psycopg2-binary==2.9.3
+python-dotenv==1.0.1
+drf-extra-fields==3.7.0
