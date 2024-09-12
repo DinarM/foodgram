@@ -1,12 +1,9 @@
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
-from django.core.exceptions import ValidationError
-from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import models
 from django.db.models import CheckConstraint, F, Q
-from rest_framework.exceptions import ValidationError as DRFValidationError
 
-from foodgram.constants import USER_USERNAME_SIZE
+from foodgram.constants import USER_USERNAME_SIZE, USER_NAME_SIZE
 
 
 class BaseModel(models.Model):
@@ -36,6 +33,16 @@ class User(AbstractUser, BaseModel):
         unique=True,
         validators=[UnicodeUsernameValidator()],
     )
+    first_name = models.CharField(
+        max_length=USER_NAME_SIZE,
+        blank=False,
+        null=False
+    )
+    last_name = models.CharField(
+        max_length=USER_NAME_SIZE,
+        blank=False,
+        null=False
+    )
     avatar = models.ImageField(
         upload_to='users/avatars/',
         verbose_name='аватар',
@@ -51,31 +58,7 @@ class User(AbstractUser, BaseModel):
         verbose_name_plural = 'Пользователи'
 
     def __str__(self):
-        return self.email
-
-    def clean(self):
-        """
-        Проверка обязательных полей и формат username.
-        """
-        super().clean()
-
-        required_fields = ('username', 'first_name', 'last_name', 'email')
-        for field in required_fields:
-            value = getattr(self, field)
-            if not value:
-                raise ValidationError(
-                    {field: f"{field} является обязательным."}
-                )
-
-    def save(self, *args, **kwargs):
-        """
-        Переопределение метода save для выполнения полной валидации.
-        """
-        try:
-            self.full_clean()
-        except DjangoValidationError as e:
-            raise DRFValidationError(e.message_dict)
-        super().save(*args, **kwargs)
+        return f'{self.email} ({self.username})'
 
 
 class Subscription(BaseModel):

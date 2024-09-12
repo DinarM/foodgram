@@ -53,7 +53,7 @@ class Ingredient(BaseModel):
         ]
 
     def __str__(self):
-        return f"{self.name} ({self.measurement_unit})"
+        return f'{self.name} ({self.measurement_unit})'
 
 
 class Tag(BaseModel):
@@ -75,7 +75,7 @@ class Tag(BaseModel):
         verbose_name_plural = 'Теги'
 
     def __str__(self):
-        return self.name
+        return f'{self.name} ({self.slug})'
 
 
 class Recipe(BaseModel):
@@ -115,7 +115,9 @@ class Recipe(BaseModel):
         validators=[
             MinValueValidator(
                 MIN_VALUE_VALIDATOR,
-                message='Время не может быть равно 0 или быть отрицательным.'
+                message=(
+                    f'Время не может быть меньше {MIN_VALUE_VALIDATOR}'
+                )
             ),
             MaxValueValidator(
                 MAX_VALUE_VALIDATOR,
@@ -139,7 +141,7 @@ class Recipe(BaseModel):
         verbose_name_plural = 'Рецепты'
 
     def __str__(self):
-        return f"{self.name} by {self.author}"
+        return f'{self.name} by {self.author}'
 
     def generate_short_code(self):
         """Генерирует уникальный короткий код."""
@@ -172,10 +174,13 @@ class RecipeIngredient(BaseModel):
     )
     amount = models.PositiveSmallIntegerField(
         verbose_name='количество',
-        validators=[MinValueValidator(
-            0.01,
-            message="Количество не может быть равно 0 или быть отрицательным."
-        )
+        validators=[
+            MinValueValidator(
+                MIN_VALUE_VALIDATOR,
+                message=(
+                    f'Количество не может быть меньше {MIN_VALUE_VALIDATOR}'
+                )
+            )
         ]
     )
 
