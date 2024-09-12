@@ -4,7 +4,6 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
-from recipe.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
@@ -12,6 +11,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from users.models import Subscription
+from recipe.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
 from .filters import IngredientFilter, RecipeFilter
 from .pagination import CustomPageNumberPagination
 from .permissions import IsAuthorOrReadOnly
@@ -20,7 +20,6 @@ from .serializers import (FavoriteSerializer, IngredientSerializer,
                           ShoppingCartSerializer, SubscribeSerializer,
                           SubscriptionSerializer, TagSerializer,
                           UserAvatarUpdateSerializer, UserSerializer)
-
 
 User = get_user_model()
 
@@ -54,16 +53,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
     Вьюсет для управления рецептами.
     """
     serializer_class = RecipeReadSerializer
+    queryset = Recipe.objects.all().order_by('-id')
     pagination_class = CustomPageNumberPagination
     filter_backends = [DjangoFilterBackend]
     filterset_class = RecipeFilter
     permission_classes = [IsAuthorOrReadOnly]
-
-    def get_queryset(self):
-        """
-        Возвращает отсортированный по убыванию id queryset.
-        """
-        return Recipe.objects.all().order_by('-id')
 
     def get_serializer_class(self):
         """
@@ -91,6 +85,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         Добавляет рецепт в избранное.
         """
         recipe = self.get_object()
+        user = request.user
 
         data = {'recipe': recipe.id}
 
@@ -98,13 +93,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
             data=data, context={'request': request}
         )
 
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(
-                serializer.errors, status=status.HTTP_400_BAD_REQUEST
-            )
+        serializer.is_valid(raise_exception=True)
+
+        serializer.save(user=user)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @favorite.mapping.delete
     def delete_favorite(self, request, pk=None):
@@ -117,13 +110,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
             user=current_user, recipe=recipe
         ).delete()
 
-        if delete_cnt > 0:
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
+        if not delete_cnt:
             return Response(
                 {"detail": "Данный рецепт не добавлен в избранное."},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
         detail=True, methods=['post'], url_path='shopping_cart',
@@ -134,6 +127,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         Добавляет рецепт в корзину покупок.
         """
         recipe = self.get_object()
+        user = request.user
 
         data = {'recipe': recipe.id}
 
@@ -141,13 +135,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
             data=data, context={'request': request}
         )
 
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(
-                serializer.errors, status=status.HTTP_400_BAD_REQUEST
-            )
+        serializer.is_valid(raise_exception=True)
+
+        serializer.save(user=user)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @shopping_cart.mapping.delete
     def delete_shopping_cart(self, request, pk=None):
@@ -160,13 +152,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
             user=current_user, recipe=recipe
         ).delete()
 
-        if delete_cnt > 0:
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
+        if not delete_cnt:
             return Response(
                 {"detail": "Данный рецепт не добавлен в корзину."},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
         detail=False, methods=['get'],
@@ -229,13 +221,11 @@ class UserViewSet(UserViewSet):
             data=data, context={'request': request}
         )
 
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(
-                serializer.errors, status=status.HTTP_400_BAD_REQUEST
-            )
+        serializer.is_valid(raise_exception=True)
+
+        serializer.save(user=current_user)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @subscribe.mapping.delete
     def delete_subscribe(self, request, id=None):
@@ -248,13 +238,13 @@ class UserViewSet(UserViewSet):
             user=current_user, subscribed_to=subscribed_to_user
         ).delete()
 
-        if delete_cnt > 0:
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
+        if not delete_cnt:
             return Response(
                 {"detail": "Вы не подписаны на этого пользователя."},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
         detail=False,
@@ -270,10 +260,12 @@ class UserViewSet(UserViewSet):
         serializer = UserAvatarUpdateSerializer(
             user, data=request.data, context={'request': request}
         )
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.is_valid(raise_exception=True)
+
+        serializer.save()
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @avatar.mapping.delete
     def delete_avatar(self, request, pk=None):
