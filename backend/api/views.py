@@ -4,14 +4,14 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
-from recipe.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from users.models import Subscription
 
+from users.models import Subscription
+from recipe.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
 from .filters import IngredientFilter, RecipeFilter
 from .pagination import CustomPageNumberPagination
 from .permissions import IsAuthorOrReadOnly
@@ -211,7 +211,7 @@ class UserViewSet(UserViewSet):
         """
         current_user = request.user
         subscribed_to_user = get_object_or_404(User, id=id)
-        print(f'на кого подписываемся: {subscribed_to_user}')
+
         data = {
             'user': current_user.id,
             'subscribed_to': subscribed_to_user.id
