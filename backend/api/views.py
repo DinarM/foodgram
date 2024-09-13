@@ -85,7 +85,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
         Добавляет рецепт в избранное.
         """
         recipe = self.get_object()
-        user = request.user
 
         data = {'recipe': recipe.id}
 
@@ -95,7 +94,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
         serializer.is_valid(raise_exception=True)
 
-        serializer.save(user=user)
+        serializer.save()
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -127,7 +126,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
         Добавляет рецепт в корзину покупок.
         """
         recipe = self.get_object()
-        user = request.user
 
         data = {'recipe': recipe.id}
 
@@ -137,7 +135,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
         serializer.is_valid(raise_exception=True)
 
-        serializer.save(user=user)
+        serializer.save()
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -209,21 +207,20 @@ class UserViewSet(UserViewSet):
         """
         Создает подписку на другого пользователя.
         """
-        current_user = request.user
         subscribed_to_user = get_object_or_404(User, id=id)
 
-        data = {
-            'user': current_user.id,
-            'subscribed_to': subscribed_to_user.id
-        }
+        data = {}
 
         serializer = SubscribeSerializer(
-            data=data, context={'request': request}
+            data=data, context={
+                'request': request,
+                'subscribed_to': subscribed_to_user
+            }
         )
 
         serializer.is_valid(raise_exception=True)
 
-        serializer.save(user=current_user)
+        serializer.save()
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
