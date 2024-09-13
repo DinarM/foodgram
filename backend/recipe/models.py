@@ -180,6 +180,12 @@ class RecipeIngredient(BaseModel):
                 message=(
                     f'Количество не может быть меньше {MIN_VALUE_VALIDATOR}'
                 )
+            ),
+            MaxValueValidator(
+                MAX_VALUE_VALIDATOR,
+                message=(
+                    'Количество не может быть больше {MAX_VALUE_VALIDATOR}'
+                )
             )
         ]
     )

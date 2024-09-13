@@ -250,7 +250,6 @@ class FavoriteSerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели Favorite.
     """
-    recipe = serializers.PrimaryKeyRelatedField(queryset=Recipe.objects.all())
     user = UserSerializer(read_only=True)
 
     class Meta:
@@ -270,6 +269,8 @@ class FavoriteSerializer(serializers.ModelSerializer):
                 "Вы уже добавили этот рецепт в избранное"
             )
 
+        data['user'] = user
+
         return data
 
     def to_representation(self, instance):
@@ -285,11 +286,11 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели ShoppingCart.
     """
-    recipe = serializers.PrimaryKeyRelatedField(queryset=Recipe.objects.all())
+    user = UserSerializer(read_only=True)
 
     class Meta:
         model = ShoppingCart
-        fields = ('recipe',)
+        fields = ('recipe', 'user')
 
     def validate(self, data):
         """
@@ -302,6 +303,8 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "Вы уже добавили этот рецепт в корзину"
             )
+
+        data['user'] = user
 
         return data
 
@@ -371,25 +374,20 @@ class SubscribeSerializer(serializers.ModelSerializer):
     """
     Сериализатор для создания и отображения подписок.
     """
-    subscribed_to = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all()
-    )
-    follower = UserSerializer(
-        source='subscribed_to', read_only=True
-    )
+    subscribed_to = UserSerializer(read_only=True)
     recipes = serializers.SerializerMethodField()
 
     class Meta:
         model = Subscription
-        fields = ('subscribed_to', 'follower', 'recipes')
+        fields = ('subscribed_to', 'recipes')
 
     def validate(self, data):
         """
         Проверка на уникальность подписки и само-подписку.
         """
-        subscribed_to_user = data.get('subscribed_to')
+        subscribed_to_user = self.context['subscribed_to']
         current_user = self.context['request'].user
-        print(f'на кого подписываемся: {subscribed_to_user}')
+
         if Subscription.objects.filter(
             user=current_user, subscribed_to=subscribed_to_user
         ).exists():
@@ -401,6 +399,9 @@ class SubscribeSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "Нельзя подписаться на самого себя."
             )
+
+        data['subscribed_to'] = subscribed_to_user
+        data['user'] = current_user
 
         return data
 
