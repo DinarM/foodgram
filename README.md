@@ -1,184 +1,172 @@
-## Проект Foodgram
-Foodgram — это удобный помощник в планировании покупок и приготовлении еды с коллекцией рецептов. Приложение позволяет делиться своими рецептами, сохранять понравившиеся в избранное и автоматически составлять список покупок на основе выбранных блюд. Также есть возможность подписываться на любимых кулинаров.
+## Проект **Foodgram**
+
+**Foodgram** — это сервис для планирования питания и покупок с коллекцией рецептов. Приложение предоставляет возможность пользователям делиться рецептами, сохранять понравившиеся блюда в избранное и автоматически создавать списки покупок на основе выбранных рецептов. Вы также можете подписываться на любимых авторов.
 
 ![workflow](https://github.com/DinarM/foodgram/actions/workflows/main.yml)
 
-Проект доступен по [адресу](https://foodgram-dinar.hopto.org/)
+Проект доступен по [этой ссылке](https://foodgram-dinar.hopto.org/)
 
-Документация к API доступна [здесь](https://foodgram-dinar.hopto.org/api/docs/)
+API-документация проекта доступна [здесь](https://foodgram-dinar.hopto.org/api/docs/)
 
-В документации представлены возможные запросы к API и формат предполагаемых ответов. Для каждого запроса указаны необходимые уровни доступа.
+Документация описывает возможные запросы и ответы API, а также включает информацию о необходимых правах доступа для каждого запроса.
 
-### Технологии:
-Python, Django, Django Rest Framework, Docker, Gunicorn, NGINX, PostgreSQL, Continuous Integration, Continuous Deployment
+### Стек технологий:
+- Python
+- Django
+- Django REST Framework
+- Docker
+- Gunicorn
+- NGINX
+- PostgreSQL
+- CI/CD
 
+### Как развернуть проект:
 
-### Развернуть проект:
-- Клонировать репозиторий
-- Установить на сервере Docker, Docker Compose
-- Скопировать на сервер файлы docker-compose.yml, nginx.conf
-- Создать и запустить контейнеры Docker:
-  sudo docker compose up -d
-- Выполнить миграции:
-  sudo docker exec -it foodgram-backend python manage.py migrate
-- Собрать статику:
-  sudo docker exec -it foodgram-backend python manage.py collectstatic
-- Заполнить базу данных с ингредиентами из файла ingredients.csv и тегами из файла tags.csv:
-  sudo docker exec -it foodgram-backend python manage.py load_ingredients_data
-  sudo docker exec -it foodgram-backend python manage.py load_tags_data
+#### Локальный запуск с использованием Docker:
 
+1. **Клонируйте репозиторий:**
+   ```bash
+   git clone https://github.com/DinarM/foodgram.git
+   ```
 
-### Развернуть проект на удаленном сервере:
+2. **Создайте файл `.env` в корневой директории, используя пример из `example.env`, и заполните его своими данными:**
+   ```bash
+   POSTGRES_DB=foodgram
+   POSTGRES_USER=foodgram_user
+   POSTGRES_PASSWORD=foodgram_password
+   DB_NAME=foodgram
+   SECRET_KEY=django-insecure-secret!key!example
+   ALLOWED_HOSTS=example.hopto.org,1.1.1.1,localhost
+   DEBUG=False
+   USE_SQLITE=False
+   ```
 
-- Клонировать репозиторий:
-```
-https://github.com/DinarM/foodgram.git
-```
+3. **Запустите контейнеры Docker:**
+   ```bash
+   docker-compose -f docker-compose-local.yml up -d
+   ```
 
-- Установить на сервере Docker, Docker Compose:
+4. **Выполните миграции, соберите статику и создайте суперпользователя:**
+   ```bash
+   docker exec -it foodgram-backend python manage.py migrate
+   docker exec -it foodgram-backend python manage.py collectstatic
+   docker exec -it foodgram-backend python manage.py createsuperuser
+   ```
 
-```
-sudo apt install curl                                   # установка утилиты для скачивания файлов
-curl -fsSL https://get.docker.com -o get-docker.sh      # скачать скрипт для установки
-sh get-docker.sh                                        # запуск скрипта
-sudo apt-get install docker-compose-plugin              # последняя версия docker compose
-```
+5. **Заполните базу данных ингредиентами и тегами:**
+   ```bash
+   docker exec -it foodgram-backend python manage.py load_ingredients_data
+   docker exec -it foodgram-backend python manage.py load_tags_data
+   ```
 
-- Скопировать на сервер файлы docker-compose.yml, nginx.conf из папки infra (команды выполнять находясь в папке infra):
+6. **Проект будет доступен по адресу: [http://localhost](http://localhost)**
 
-```
-scp docker-compose.yml nginx.conf username@IP:/home/username/foodgram   # username - имя пользователя на сервере
-                                                                        # IP - публичный IP сервера
-```
+API-документация будет доступна по адресу: [http://localhost/api/docs/](http://localhost/api/docs/)
 
-- В корневой директории создать файл .env и заполнить своими данными по аналогии с example.env:
-```
-sudo nano .env
-```
+#### Развертывание на удаленном сервере:
 
-- Для работы с GitHub Actions необходимо в репозитории в разделе Secrets > Actions создать переменные окружения:
-```
-SECRET_KEY              # секретный ключ Django проекта
-DOCKER_PASSWORD         # пароль от Docker Hub
-DOCKER_USERNAME         # логин Docker Hub
-HOST                    # публичный IP сервера
-USER                    # имя пользователя на сервере
-PASSPHRASE              # *если ssh-ключ защищен паролем
-SSH_KEY                 # приватный ssh-ключ
-TELEGRAM_TO             # ID телеграм-аккаунта для посылки сообщения
-TELEGRAM_TOKEN          # токен бота, посылающего сообщение
-```
+1. **Клонируйте репозиторий:**
+   ```bash
+   git clone https://github.com/DinarM/foodgram.git
+   ```
 
-- Создать и запустить контейнеры Docker, выполнить команду на сервере
-```
-sudo docker compose up -d
-```
+2. **Установите Docker и Docker Compose на сервере:**
+   ```bash
+   sudo apt install curl
+   curl -fsSL https://get.docker.com -o get-docker.sh
+   sh get-docker.sh
+   sudo apt-get install docker-compose-plugin
+   ```
 
-- После успешной сборки выполнить миграции:
-```
-sudo docker exec -it foodgram-backend python manage.py migrate
-```
+3. **Скопируйте файлы `docker-compose.yml` и `nginx.conf` на сервер:**
+   ```bash
+   scp docker-compose.yml nginx.conf username@IP:/home/username/foodgram
+   ```
 
-- Создать суперпользователя:
-```
-sudo docker exec -it foodgram-backend python manage.py createsuperuser
-```
+4. **Создайте файл `.env` и настройте его по аналогии с `example.env`:**
+   ```bash
+   POSTGRES_DB=foodgram
+   POSTGRES_USER=foodgram_user
+   POSTGRES_PASSWORD=foodgram_password
+   DB_NAME=foodgram
+   SECRET_KEY=django-insecure-secret!key!example
+   ALLOWED_HOSTS=example.hopto.org,1.1.1.1,localhost
+   DEBUG=False
+   USE_SQLITE=False
+   ```
 
-- Собрать статику:
-```
-sudo docker exec -it foodgram-backend python manage.py collectstatic
-```
+5. **Запустите Docker-контейнеры:**
+   ```bash
+   sudo docker compose up -d
+   ```
 
-- Заполнить базу данных с ингредиентами из файла ingredients.csv и тегами из файла tags.csv:
-```
-sudo docker exec -it foodgram-backend python manage.py load_ingredients_data
-sudo docker exec -it foodgram-backend python manage.py load_tags_data
-```
+6. **После успешной сборки выполните миграции и сбор статики:**
+   ```bash
+   sudo docker exec -it foodgram-backend python manage.py migrate
+   sudo docker exec -it foodgram-backend python manage.py collectstatic
+   ```
 
-- Для остановки контейнеров Docker:
-```
-sudo docker compose down -v      # с их удалением
-sudo docker compose stop         # без удаления
-```
+7. **Создайте суперпользователя:**
+   ```bash
+   sudo docker exec -it foodgram-backend python manage.py createsuperuser
+   ```
 
+8. **Заполните базу данных:**
+   ```bash
+   sudo docker exec -it foodgram-backend python manage.py load_ingredients_data
+   sudo docker exec -it foodgram-backend python manage.py load_tags_data
+   ```
 
-### Запуск проекта на локальной машине через Docker:
+9. **Остановка контейнеров:**
+   ```bash
+   sudo docker compose down -v # удаление контейнеров
+   sudo docker compose stop    # остановка без удаления
+   ```
 
-- Клонировать репозиторий:
-```
-https://github.com/DinarM/foodgram.git
-```
+### Запуск проекта без Docker:
 
-- В корневой директории создать файл .env и заполнить своими данными по аналогии с example.env:
-```
-DB_ENGINE=django.db.backends.postgresql
-POSTGRES_DB=postgres
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-DB_HOST=db
-DB_PORT=5432
-SECRET_KEY='секретный ключ Django'
-```
+1. **Клонируйте репозиторий:**
+   ```bash
+   git clone https://github.com/DinarM/foodgram.git
+   ```
 
-- Создать и запустить контейнеры Docker, последовательно выполнить команды по созданию миграций, сбору статики, 
-созданию суперпользователя, как указано выше.
-```
-docker-compose -f docker-compose-local.yml up -d
-```
+2. **Создайте файл `.env` и настройте его:**
+   ```bash
+   POSTGRES_DB=foodgram
+   POSTGRES_USER=foodgram_user
+   POSTGRES_PASSWORD=foodgram_password
+   DB_NAME=foodgram
+   SECRET_KEY=django-insecure-secret!key!example
+   ALLOWED_HOSTS=example.hopto.org,1.1.1.1,localhost
+   DEBUG=False
+   USE_SQLITE=True (обязательно указываем True для использования БД SQLite)
+   ```
 
+3. **Выполните миграции и сбор статики:**
+   ```bash
+   python manage.py migrate
+   python manage.py collectstatic
+   ```
 
-- После запуска проект будут доступен по адресу: [http://localhost/](http://localhost/)
+4. **Создайте суперпользователя:**
+   ```bash
+   python manage.py createsuperuser
+   ```
 
+5. **Запустите сервер:**
+   ```bash
+   python manage.py runserver
+   ```
 
-- Документация будет доступна по адресу: [http://localhost/api/docs/](http://localhost/api/docs/)
+6. **Заполните базу данных:**
+   ```bash
+   python manage.py load_ingredients_data
+   python manage.py load_tags_data
+   ```
 
+7. **Проект будет доступен по адресу: [http://127.0.0.1:8000/](http://127.0.0.1:8000/)**
 
-### Запуск проекта на локальной машине:
-
-- Клонировать репозиторий:
-```
-https://github.com/DinarM/foodgram.git
-```
-
-- В корневой директории создать файл .env и заполнить своими данными по аналогии с example.env:
-```
-POSTGRES_DB=foodgram
-POSTGRES_USER=foodgram_user
-POSTGRES_PASSWORD=foodgram_password
-DB_NAME=foodgram
-SECRET_KEY=django-insecure-secret!key!example
-ALLOWED_HOSTS=example.hopto.org,1.1.1.1,localhost
-DEBUG=False
-USE_SQLITE=False (обязательно указываем False для использования БД SQLite)
-```
-
-- Выполнить миграции:
-```
-python manage.py migrate
-```
-
-- Создать суперпользователя:
-```
-python manage.py createsuperuser
-``
-
-- Запустить сервер:
-```
-python manage.py runserver
-```
-
-- Заполнить базу данных с ингредиентами из файла ingredients.csv и тегами из файла tags.csv:
-```
-python manage.py load_ingredients_data
-python manage.py load_tags_data
-```
-
-- После запуска проект будут доступен по адресу: [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
-
-
-- Документация будет доступна по адресу: [http://127.0.0.1:8000/api/docs/](http://127.0.0.1:8000/api/docs/)
-
+API-документация будет доступна по адресу: [http://127.0.0.1:8000/api/docs/](http://127.0.0.1:8000/api/docs/)
 
 ### Автор backend'а:
-
-Динар Мирсаитов
+**Динар Мирсаитов**
