@@ -2,7 +2,7 @@
 
 **Foodgram** — это сервис для планирования питания и покупок с коллекцией рецептов. Приложение предоставляет возможность пользователям делиться рецептами, сохранять понравившиеся блюда в избранное и автоматически создавать списки покупок на основе выбранных рецептов. Вы также можете подписываться на любимых авторов.
 
-![workflow](https://github.com/DinarM/foodgram/actions/workflows/main.yml)
+[workflow](https://github.com/DinarM/foodgram/actions/workflows/main.yml)
 
 Проект доступен по [этой ссылке](https://foodgram-dinar.hopto.org/)
 
