@@ -48,6 +48,7 @@ API-документация проекта доступна [здесь](https:
 
 4. **Выполните миграции, соберите статику и создайте суперпользователя:**
    ```bash
+   docker exec -it foodgram-backend python manage.py makemigrations
    docker exec -it foodgram-backend python manage.py migrate
    docker exec -it foodgram-backend python manage.py collectstatic
    docker exec -it foodgram-backend python manage.py createsuperuser
@@ -102,6 +103,7 @@ API-документация будет доступна по адресу: [htt
 
 6. **После успешной сборки выполните миграции и сбор статики:**
    ```bash
+   sudo docker exec -it foodgram-backend python manage.py makemigrations
    sudo docker exec -it foodgram-backend python manage.py migrate
    sudo docker exec -it foodgram-backend python manage.py collectstatic
    ```
@@ -144,6 +146,7 @@ API-документация будет доступна по адресу: [htt
 
 3. **Выполните миграции и сбор статики:**
    ```bash
+   python manage.py makemigrations
    python manage.py migrate
    python manage.py collectstatic
    ```
