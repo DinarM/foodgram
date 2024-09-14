@@ -169,9 +169,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
         для текущего пользователя.
         """
         ingredients = Ingredient.objects.filter(
-            recipes__shopping_carts__user=request.user
+            recipeingredient__recipe__shopping_carts__user=request.user
         ).values('name', 'measurement_unit').annotate(
-            total_amount=Sum('recipes__recipe_ingredients__amount')
+            total_amount=Sum('recipeingredient__amount')
         )
 
         content = 'Список покупок:\n\n'
@@ -207,15 +207,12 @@ class UserViewSet(UserViewSet):
         """
         Создает подписку на другого пользователя.
         """
-        subscribed_to_user = get_object_or_404(User, id=id)
+        subscribed_to = get_object_or_404(User, id=id)
 
-        data = {}
+        data = {'subscribed_to': subscribed_to.id}
 
         serializer = SubscribeSerializer(
-            data=data, context={
-                'request': request,
-                'subscribed_to': subscribed_to_user
-            }
+            data=data, context={'request': request}
         )
 
         serializer.is_valid(raise_exception=True)
