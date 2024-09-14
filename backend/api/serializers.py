@@ -250,11 +250,10 @@ class FavoriteSerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели Favorite.
     """
-    user = UserSerializer(read_only=True)
 
     class Meta:
         model = Favorite
-        fields = ('recipe', 'user')
+        fields = ('recipe',)
 
     def validate(self, data):
         """
@@ -286,17 +285,17 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели ShoppingCart.
     """
-    user = UserSerializer(read_only=True)
 
     class Meta:
         model = ShoppingCart
-        fields = ('recipe', 'user')
+        fields = ('recipe',)
 
     def validate(self, data):
         """
         Проверка на наличие дубликатов рецептов в корзине.
         """
         recipe = data.get('recipe')
+
         user = self.context['request'].user
 
         if ShoppingCart.objects.filter(user=user, recipe=recipe).exists():
@@ -374,18 +373,18 @@ class SubscribeSerializer(serializers.ModelSerializer):
     """
     Сериализатор для создания и отображения подписок.
     """
-    subscribed_to = UserSerializer(read_only=True)
     recipes = serializers.SerializerMethodField()
 
     class Meta:
         model = Subscription
-        fields = ('subscribed_to', 'recipes')
+        fields = ('recipes', 'subscribed_to')
 
     def validate(self, data):
         """
         Проверка на уникальность подписки и само-подписку.
         """
-        subscribed_to_user = self.context['subscribed_to']
+        subscribed_to_user = data.get('subscribed_to')
+
         current_user = self.context['request'].user
 
         if Subscription.objects.filter(
@@ -400,7 +399,6 @@ class SubscribeSerializer(serializers.ModelSerializer):
                 "Нельзя подписаться на самого себя."
             )
 
-        data['subscribed_to'] = subscribed_to_user
         data['user'] = current_user
 
         return data
